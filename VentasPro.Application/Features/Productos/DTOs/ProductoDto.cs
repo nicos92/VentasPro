@@ -5,7 +5,9 @@ public class ProductoDto
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string Descripcion { get; set; } = string.Empty;
-    public decimal Precio { get; set; }
+    public decimal PrecioCosto { get; set; }
+    public decimal PorcentajeGanancia { get; set; }
+    public decimal PrecioVenta { get; set; }
     public int Stock { get; set; }
     public string? CodigoBarras { get; set; }
     public int? CategoriaId { get; set; }

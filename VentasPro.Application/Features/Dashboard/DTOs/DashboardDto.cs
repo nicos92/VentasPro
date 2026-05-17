@@ -42,7 +42,7 @@ public class ProductoStockBajoDto
     public string Nombre { get; set; } = string.Empty;
     public string? CodigoBarras { get; set; }
     public int Stock { get; set; }
-    public decimal Precio { get; set; }
+    public decimal PrecioVenta { get; set; }
 }
 
 public class VentasPorMesDto

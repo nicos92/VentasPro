@@ -85,14 +85,14 @@ else
                                 var producto = productos.FirstOrDefault(p => p.Id == detalle.ProductoId);
                                 <tr>
                                     <td>@producto?.Nombre</td>
-                                    <td>@producto?.Precio.ToString("N2")</td>
+                                    <td>@producto?.PrecioVenta.ToString("N2")</td>
                                     <td>
                                         <input type="number" min="1" value="@detalle.Cantidad"
                                                @oninput="(e) => ActualizarCantidad(index, e)" class="form-control form-control-sm"
                                                style="width: 80px;" />
                                         <small class="text-muted">Stock: @producto?.Stock</small>
                                     </td>
-                                    <td>@(((producto?.Precio ?? 0) * detalle.Cantidad).ToString("N2"))</td>
+                                    <td>@(((producto?.PrecioVenta ?? 0) * detalle.Cantidad).ToString("N2"))</td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoverDetalle(index)">
                                             <i class="bi bi-trash"></i>
@@ -125,7 +125,7 @@ else
                             <option value="0">-- Seleccionar Producto --</option>
                             @foreach (var prod in productos)
                             {
-                                <option value="@prod.Id">@prod.Nombre - Stock: @prod.Stock - $@prod.Precio.ToString("N2")
+                                <option value="@prod.Id">@prod.Nombre - Stock: @prod.Stock - $@prod.PrecioVenta.ToString("N2")
                                 </option>
                             }
                         </select>
@@ -228,7 +228,7 @@ else
     private decimal Subtotal => command.Detalles.Sum(d =>
     {
         var prod = productos?.FirstOrDefault(p => p.Id == d.ProductoId);
-        return (prod?.Precio ?? 0) * d.Cantidad;
+        return (prod?.PrecioVenta ?? 0) * d.Cantidad;
     });
 
     private decimal Impuestos => Subtotal * (command.PorcentajeImpuesto / 100);

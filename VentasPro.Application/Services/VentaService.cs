@@ -86,7 +86,7 @@ public class VentaService : IVentaService
         foreach (var detalle in command.Detalles)
         {
             var producto = productos[detalle.ProductoId];
-            var precioUnitario = producto.Precio;
+            var precioUnitario = producto.PrecioVenta;
             var subtotalDetalle = precioUnitario * detalle.Cantidad;
             subtotal += subtotalDetalle;
 

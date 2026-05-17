@@ -59,7 +59,7 @@ public class DashboardService : IDashboardService
             ProductosActivos = productosActivos.Count,
             ProductosInactivos = productos.Count - productosActivos.Count,
             CantidadProductosStockBajo = productosStockBajo.Count,
-            ValorTotalInventario = productosActivos.Sum(p => p.Precio * p.Stock),
+            ValorTotalInventario = productosActivos.Sum(p => p.PrecioVenta * p.Stock),
 
             TotalClientes = clientes.Count,
             ClientesActivos = clientesActivos.Count,
@@ -85,7 +85,7 @@ public class DashboardService : IDashboardService
                     Nombre = p.Nombre,
                     CodigoBarras = p.CodigoBarras,
                     Stock = p.Stock,
-                    Precio = p.Precio
+                    PrecioVenta = p.PrecioVenta
                 })
                 .ToList(),
             VentasPorMes = ventasPorMes

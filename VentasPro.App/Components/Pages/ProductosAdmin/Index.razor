@@ -51,8 +51,10 @@ else
                 <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Nombre))">
                     Nombre <i class="@GetSortIcon(nameof(ProductoDto.Nombre))"></i>
                 </th>
-                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Precio))">
-                    Precio <i class="@GetSortIcon(nameof(ProductoDto.Precio))"></i>
+                <th>Costo</th>
+                <th>% Gan.</th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.PrecioVenta))">
+                    Venta <i class="@GetSortIcon(nameof(ProductoDto.PrecioVenta))"></i>
                 </th>
                 <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Stock))">
                     Stock <i class="@GetSortIcon(nameof(ProductoDto.Stock))"></i>
@@ -67,7 +69,9 @@ else
                 <tr class="@(producto.Activo ? "" : "table-secondary")">
                     <td>@producto.CodigoBarras</td>
                     <td>@producto.Nombre</td>
-                    <td>@producto.Precio.ToString("C")</td>
+                    <td>@producto.PrecioCosto.ToString("N2")</td>
+                    <td>@producto.PorcentajeGanancia.ToString("N1")%</td>
+                    <td class="text-success fw-bold">@producto.PrecioVenta.ToString("N2")</td>
                     <td class="@GetStockColor(producto.Stock)">@producto.Stock</td>
                     <td>
                         <span class="badge @(producto.Activo ? "bg-success" : "bg-secondary")">
@@ -152,17 +156,17 @@ else
 
         resultado = columnaOrden switch
         {
-            nameof(ProductoDto.CodigoBarras) => ascendente 
-                ? resultado?.OrderBy(p => p.CodigoBarras) 
+            nameof(ProductoDto.CodigoBarras) => ascendente
+                ? resultado?.OrderBy(p => p.CodigoBarras)
                 : resultado?.OrderByDescending(p => p.CodigoBarras),
-            nameof(ProductoDto.Precio) => ascendente 
-                ? resultado?.OrderBy(p => p.Precio) 
-                : resultado?.OrderByDescending(p => p.Precio),
-            nameof(ProductoDto.Stock) => ascendente 
-                ? resultado?.OrderBy(p => p.Stock) 
+            nameof(ProductoDto.PrecioVenta) => ascendente
+                ? resultado?.OrderBy(p => p.PrecioVenta)
+                : resultado?.OrderByDescending(p => p.PrecioVenta),
+            nameof(ProductoDto.Stock) => ascendente
+                ? resultado?.OrderBy(p => p.Stock)
                 : resultado?.OrderByDescending(p => p.Stock),
-            _ => ascendente 
-                ? resultado?.OrderBy(p => p.Nombre) 
+            _ => ascendente
+                ? resultado?.OrderBy(p => p.Nombre)
                 : resultado?.OrderByDescending(p => p.Nombre)
         };
 

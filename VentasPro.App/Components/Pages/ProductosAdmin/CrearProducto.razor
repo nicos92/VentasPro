@@ -27,12 +27,17 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Precio</label>
-            <InputNumber @bind-Value="command.Precio" class="form-control" />
-            <ValidationMessage For="@(() => command.Precio)" />
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Precio Costo</label>
+            <InputNumber @bind-Value="command.PrecioCosto" class="form-control" />
+            <ValidationMessage For="@(() => command.PrecioCosto)" />
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">% Ganancia</label>
+            <InputNumber @bind-Value="command.PorcentajeGanancia" class="form-control" />
+            <ValidationMessage For="@(() => command.PorcentajeGanancia)" />
+        </div>
+        <div class="col-md-4 mb-3">
             <label class="form-label">Stock</label>
             <InputNumber @bind-Value="command.Stock" class="form-control" />
             <ValidationMessage For="@(() => command.Stock)" />
@@ -60,6 +65,17 @@
         </div>
     </div>
 
+    <div class="card bg-light mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Precio Venta:</label>
+                    <h4 class="text-success">@PrecioVentaCalculado.ToString("N2")</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="mb-3">
         <button type="submit" class="btn btn-success">
             <i class="bi bi-check-circle"></i> Guardar
@@ -79,8 +95,11 @@
 
 @code {
 
-    private CreateProductoCommand command = new();
+    private CreateProductoCommand command = new() { PorcentajeGanancia = 30 };
     private IEnumerable<CategoriaDto>? categorias;
+
+    private decimal PrecioVentaCalculado => command.PrecioCosto + (command.PrecioCosto * command.PorcentajeGanancia / 100);
+
     protected override async Task OnInitializedAsync()
     {
         categorias = await CategoriaService.GetAllAsync(true);

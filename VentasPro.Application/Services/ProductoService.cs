@@ -49,7 +49,8 @@ public class ProductoService : IProductoService
         {
             Nombre = command.Nombre,
             Descripcion = command.Descripcion,
-            Precio = command.Precio,
+            PrecioCosto = command.PrecioCosto,
+            PorcentajeGanancia = command.PorcentajeGanancia,
             Stock = command.Stock,
             CodigoBarras = command.CodigoBarras,
             CategoriaId = command.CategoriaId
@@ -75,7 +76,8 @@ public class ProductoService : IProductoService
 
         producto.Nombre = command.Nombre;
         producto.Descripcion = command.Descripcion;
-        producto.Precio = command.Precio;
+        producto.PrecioCosto = command.PrecioCosto;
+        producto.PorcentajeGanancia = command.PorcentajeGanancia;
         producto.Stock = command.Stock;
         producto.CodigoBarras = command.CodigoBarras;
         producto.CategoriaId = command.CategoriaId;
@@ -118,7 +120,9 @@ public class ProductoService : IProductoService
             Id = producto.Id,
             Nombre = producto.Nombre,
             Descripcion = producto.Descripcion,
-            Precio = producto.Precio,
+            PrecioCosto = producto.PrecioCosto,
+            PorcentajeGanancia = producto.PorcentajeGanancia,
+            PrecioVenta = producto.PrecioVenta,
             Stock = producto.Stock,
             CodigoBarras = producto.CodigoBarras,
             CategoriaId = producto.CategoriaId,

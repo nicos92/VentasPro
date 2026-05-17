@@ -14,9 +14,13 @@ public class UpdateProductoCommand
     [StringLength(1000, ErrorMessage = "El campo Descripción debe tener como máximo 1000 caracteres.")]
     public string Descripcion { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El campo Precio es requerido.")]
-    [Range(0, double.MaxValue, ErrorMessage = "El campo Precio debe ser un valor positivo.")]
-    public decimal Precio { get; set; }
+    [Required(ErrorMessage = "El campo Precio Costo es requerido.")]
+    [Range(0, double.MaxValue, ErrorMessage = "El campo Precio Costo debe ser un valor positivo.")]
+    public decimal PrecioCosto { get; set; }
+
+    [Required(ErrorMessage = "El campo Porcentaje de Ganancia es requerido.")]
+    [Range(0, 1000, ErrorMessage = "El Porcentaje de Ganancia debe ser entre 0 y 1000.")]
+    public decimal PorcentajeGanancia { get; set; }
 
     [Required(ErrorMessage = "El campo Stock es requerido.")]
     public int Stock { get; set; }
