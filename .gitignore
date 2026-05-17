@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+VentasPro.App/VentasPro.db-wal
+VentasPro.App/VentasPro.db
+VentasPro.App/VentasPro.db-shm
