@@ -6,7 +6,7 @@ Sistema de ventas desarrollado con Blazor Server, .NET 8 y Arquitectura Limpia (
 
 El proyecto sigue los principios de Clean Architecture con las siguientes capas:
 
-```
+```bash
 ┌─────────────────────────────────────┐
 │         VentasPro.App               │  ← Presentación (Blazor Server)
 │  Pages, Components, Layouts         │
@@ -25,12 +25,13 @@ El proyecto sigue los principios de Clean Architecture con las siguientes capas:
 ### Regla de Dependencias
 
 Las dependencias siempre apuntan hacia adentro:
+
 - `App` → `Application` → `Domain`
 - `Infrastructure` → `Application` + `Domain`
 
 ## Estructura del Proyecto
 
-```
+```bash
 VentasPro/
 ├── VentasPro.sln
 │
@@ -45,11 +46,15 @@ VentasPro/
 │   └── Features/
 │       ├── Productos/
 │       │   ├── Commands/   # Create, Update
-│       │   ├── Queries/    # GetById, GetAll
 │       │   └── DTOs/       # ProductoDto
-│       └── Clientes/
+│       ├── Clientes/
+│       │   ├── Commands/
+│       │   └── DTOs/
+│       ├── Categorias/
+│       │   ├── Commands/
+│       │   └── DTOs/
+│       └── Ventas/
 │           ├── Commands/
-│           ├── Queries/
 │           └── DTOs/
 │
 ├── VentasPro.Infrastructure/
@@ -61,7 +66,7 @@ VentasPro/
 │
 └── VentasPro.App/
     ├── Components/
-    │   ├── Pages/          # Producto, Cliente, Home
+    │   ├── Pages/          # ProductosAdmin, ClientesAdmin, CategoriasAdmin, VentasAdmin
     │   └── Layout/         # NavMenu, MainLayout
     ├── Program.cs
     └── appsettings.json
@@ -85,16 +90,19 @@ VentasPro/
 ## Configuración
 
 ### 1. Restaurar paquetes
+
 ```bash
 dotnet restore
 ```
 
 ### 2. Aplicar migraciones
+
 ```bash
 dotnet ef database update --project VentasPro.Infrastructure --startup-project VentasPro.App
 ```
 
 ### 3. Ejecutar la aplicación
+
 ```bash
 cd VentasPro.App
 dotnet run
@@ -109,6 +117,7 @@ La base de datos SQLite se crea automáticamente en `VentasPro.App/VentasPro.db`
 ### Migraciones
 
 Crear una nueva migración:
+
 ```bash
 dotnet ef migrations add <NombreMigracion> --project VentasPro.Infrastructure --startup-project VentasPro.App --output-dir Data/Migrations
 ```
@@ -117,12 +126,61 @@ dotnet ef migrations add <NombreMigracion> --project VentasPro.Infrastructure --
 
 - [x] Gestión de Productos (CRUD)
 - [x] Gestión de Clientes (CRUD)
+- [x] Gestión de Categorías (CRUD)
+- [x] Registro de Ventas (con descuento automático de stock)
 - [x] Base de datos SQLite con EF Core
 - [x] Arquitectura Limpia implementada
-- [ ] Registro de Ventas
 - [ ] Dashboard con estadísticas
 - [ ] Autenticación y autorización
 - [ ] Preparación para Docker
+
+## Publicación para IIS
+
+### 1. Publicar la aplicación
+
+```bash
+dotnet publish VentasPro.App -c Release -o ./publish
+```
+
+### 2. Configurar IIS
+
+1. **Instalar requisitos previos:**
+   - Descargar e instalar .NET Hosting Bundle para .NET 8: <https://dotnet.microsoft.com/download/dotnet/8.0>
+
+2. **Crear Aplicación en IIS:**
+   - Abrir IIS Manager
+   - Clic derecho en "Sites" → "Add Website"
+   - Nombre: `VentasPro`
+   - Physical path: `C:\path\to\VentasPro\publish`
+   - Port: `80` o puerto deseado
+
+3. **Configurar Application Pool:**
+   - Seleccionar el sitio → "Basic Settings"
+   - Clic en "Connect as..." → seleccionar "Specific user" → crear usuario local o usar ApplicationPoolIdentity
+   - Verificar que la versión de .NET CLR sea "No Managed Code"
+
+4. **Permisos de carpeta:**
+   - Otorgar permisos de lectura/escritura al usuario del App Pool sobre la carpeta `publish`
+
+5. **Base de datos:**
+   - Asegurarse de que la carpeta `publish` tenga permisos de escritura para crear `VentasPro.db`
+
+### 3. Estructura de publicación
+
+```bash
+publish/
+├── VentasPro.App.dll
+├── VentasPro.App.deps.json
+├── VentasPro.App.runtimeconfig.json
+├── VentasPro.db              # Se crea automáticamente
+├── wwwroot/
+└── web.config
+```
+
+### 4. Verificar funcionamiento
+
+- Visitar `http://localhost/VentasPro` en el navegador
+- Si hay errores, revisar el Visor de Eventos de Windows o logs de IIS
 
 ## Docker
 
