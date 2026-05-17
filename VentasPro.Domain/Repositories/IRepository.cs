@@ -5,7 +5,7 @@ namespace VentasPro.Domain.Repositories;
 
 public interface IRepository<T> where T : BaseEntity
 {
-    Task<IEnumerable<T>> GetAllAsync();
+    Task<IEnumerable<T>> GetAllAsync(bool includeInactive = false);
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
     Task<T?> GetByIdAsync(int id);
     Task<T> AddAsync(T entity);

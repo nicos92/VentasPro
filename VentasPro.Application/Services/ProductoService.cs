@@ -16,22 +16,13 @@ public class ProductoService : IProductoService
         _productoRepository = productoRepository;
     }
 
-    public async Task<IEnumerable<ProductoDto>> GetAllAsync(GetAllProductosQuery? query = null)
+    public async Task<IEnumerable<ProductoDto>> GetAllAsync(bool? soloActivos = null)
     {
-        IEnumerable<Producto> productos;
+        IEnumerable<Producto> productos = await _productoRepository.GetAllAsync(includeInactive: true);
 
-        if (query?.CategoriaId != null)
+        if (soloActivos.HasValue)
         {
-            productos = await _productoRepository.GetByCategoriaAsync(query.CategoriaId.Value);
-        }
-        else
-        {
-            productos = await _productoRepository.GetAllAsync();
-        }
-
-        if (query?.SoloActivos == true)
-        {
-            productos = productos.Where(p => p.Activo);
+            productos = productos.Where(p => p.Activo == soloActivos.Value);
         }
 
         return productos.Select(MapToDto);
@@ -78,6 +69,16 @@ public class ProductoService : IProductoService
     public async Task DeleteAsync(int id)
     {
         await _productoRepository.DeleteAsync(id);
+    }
+
+    public async Task ActivateAsync(int id)
+    {
+        var producto = await _productoRepository.GetByIdAsync(id)
+            ?? throw new InvalidOperationException($"Producto con ID {id} no encontrado.");
+
+        producto.Activo = true;
+        producto.FechaModificacion = DateTime.UtcNow;
+        await _productoRepository.UpdateAsync(producto);
     }
 
     public async Task<IEnumerable<ProductoDto>> GetByCategoriaAsync(int categoriaId)

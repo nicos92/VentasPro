@@ -31,11 +31,13 @@ public class ProductoRepository : Repository<Producto>, IProductoRepository
             .ToListAsync();
     }
 
-    public override async Task<IEnumerable<Producto>> GetAllAsync()
+    public override async Task<IEnumerable<Producto>> GetAllAsync(bool includeInactive = false)
     {
-        return await _dbSet
-            .Where(p => p.Activo)
-            .Include(p => p.Categoria)
-            .ToListAsync();
+        var query = _dbSet.Include(p => p.Categoria).AsQueryable();
+        if (!includeInactive)
+        {
+            query = query.Where(p => p.Activo);
+        }
+        return await query.ToListAsync();
     }
 }

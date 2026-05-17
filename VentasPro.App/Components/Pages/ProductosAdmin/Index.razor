@@ -6,7 +6,13 @@
 
 <h3>Productos</h3>
 
-<div class="mb-3">
+<div class="mb-3 d-flex gap-2">
+    <select class="form-select w-auto" @bind="filtroActivos">
+        <option value="todos">Todos</option>
+        <option value="activos">Solo Activos</option>
+        <option value="inactivos">Solo Inactivos</option>
+    </select>
+    <button class="btn btn-secondary" @onclick="Filtrar">Filtrar</button>
     <a href="/productos/nuevo" class="btn btn-primary">Nuevo Producto</a>
 </div>
 
@@ -20,31 +26,40 @@ else if (!productos.Any())
 }
 else
 {
-    <table class="table table-striped">
+    <table class="table table-striped col-12">
         <thead>
             <tr>
                 <th>Código</th>
                 <th>Nombre</th>
-                <th>Descripción</th>
                 <th>Precio</th>
                 <th>Stock</th>
-                <th>Categoría</th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var producto in productos)
             {
-                <tr>
+                <tr class="@(producto.Activo ? "" : "table-secondary")">
                     <td>@producto.CodigoBarras</td>
                     <td>@producto.Nombre</td>
-                    <td>@producto.Descripcion</td>
                     <td>@producto.Precio.ToString("C")</td>
                     <td>@producto.Stock</td>
-                    <td>@producto.CategoriaNombre</td>
+                    <td>
+                        <span class="badge @(producto.Activo ? "bg-success" : "bg-secondary")">
+                            @(producto.Activo ? "Activo" : "Inactivo")
+                        </span>
+                    </td>
                     <td>
                         <a href="/productos/editar/@producto.Id" class="btn btn-sm btn-warning">Editar</a>
-                        <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(producto.Id)">Eliminar</button>
+                        @if (producto.Activo)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(producto.Id)">Desactivar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => Activar(producto.Id)">Activar</button>
+                        }
                     </td>
                 </tr>
             }
@@ -54,6 +69,7 @@ else
 
 @code {
     private IEnumerable<ProductoDto>? productos;
+    private string filtroActivos = "todos";
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,12 +78,30 @@ else
 
     private async Task CargarProductos()
     {
-        productos = await ProductoService.GetAllAsync();
+        bool? soloActivos = filtroActivos switch
+        {
+            "activos" => true,
+            "inactivos" => false,
+            _ => null
+        };
+
+        productos = await ProductoService.GetAllAsync(soloActivos);
+    }
+
+    private async Task Filtrar()
+    {
+        await CargarProductos();
     }
 
     private async Task Eliminar(int id)
     {
         await ProductoService.DeleteAsync(id);
+        await CargarProductos();
+    }
+
+    private async Task Activar(int id)
+    {
+        await ProductoService.ActivateAsync(id);
         await CargarProductos();
     }
 }

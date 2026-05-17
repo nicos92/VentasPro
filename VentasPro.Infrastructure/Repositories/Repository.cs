@@ -17,9 +17,14 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         _dbSet = context.Set<T>();
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(bool includeInactive = false)
     {
-        return await _dbSet.Where(e => e.Activo).ToListAsync();
+        var query = _dbSet.AsQueryable();
+        if (!includeInactive)
+        {
+            query = query.Where(e => e.Activo);
+        }
+        return await query.ToListAsync();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
