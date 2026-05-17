@@ -13,17 +13,20 @@ public class VentaService : IVentaService
     private readonly IDetalleVentaRepository _detalleVentaRepository;
     private readonly IProductoRepository _productoRepository;
     private readonly IClienteRepository _clienteRepository;
+    private readonly IApplicationDbContext _context;
 
     public VentaService(
         IVentaRepository ventaRepository,
         IDetalleVentaRepository detalleVentaRepository,
         IProductoRepository productoRepository,
-        IClienteRepository clienteRepository)
+        IClienteRepository clienteRepository,
+        IApplicationDbContext context)
     {
         _ventaRepository = ventaRepository;
         _detalleVentaRepository = detalleVentaRepository;
         _productoRepository = productoRepository;
         _clienteRepository = clienteRepository;
+        _context = context;
     }
 
     public async Task<IEnumerable<VentaDto>> GetAllAsync(bool? soloActivos = null)
@@ -46,97 +49,119 @@ public class VentaService : IVentaService
 
     public async Task<VentaDto> CreateAsync(CreateVentaCommand command)
     {
-        if (command.ClienteId.HasValue)
-        {
-            var cliente = await _clienteRepository.GetByIdAsync(command.ClienteId.Value);
-            if (cliente == null || !cliente.Activo)
-            {
-                throw new InvalidOperationException("El cliente seleccionado no existe o no está activo.");
-            }
-        }
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        var productosIds = command.Detalles.Select(d => d.ProductoId).Distinct().ToList();
-        var productos = (await _productoRepository.GetAllAsync(includeInactive: true))
-            .Where(p => productosIds.Contains(p.Id))
-            .ToDictionary(p => p.Id);
-
-        foreach (var detalle in command.Detalles)
+        try
         {
-            if (!productos.TryGetValue(detalle.ProductoId, out var producto))
+            if (command.ClienteId.HasValue)
             {
-                throw new InvalidOperationException($"El producto con ID {detalle.ProductoId} no existe.");
+                var cliente = await _clienteRepository.GetByIdAsync(command.ClienteId.Value);
+                if (cliente == null || !cliente.Activo)
+                {
+                    throw new InvalidOperationException("El cliente seleccionado no existe o no está activo.");
+                }
             }
 
-            if (!producto.Activo)
+            var productosIds = command.Detalles.Select(d => d.ProductoId).Distinct().ToList();
+            var productos = (await _productoRepository.GetAllAsync(includeInactive: true))
+                .Where(p => productosIds.Contains(p.Id))
+                .ToDictionary(p => p.Id);
+
+            foreach (var detalle in command.Detalles)
             {
-                throw new InvalidOperationException($"El producto '{producto.Nombre}' no está activo.");
+                if (!productos.TryGetValue(detalle.ProductoId, out var producto))
+                {
+                    throw new InvalidOperationException($"El producto con ID {detalle.ProductoId} no existe.");
+                }
+
+                if (!producto.Activo)
+                {
+                    throw new InvalidOperationException($"El producto '{producto.Nombre}' no está activo.");
+                }
             }
-        }
 
-        var venta = new Venta
-        {
-            ClienteId = command.ClienteId,
-            FechaVenta = DateTime.UtcNow,
-            MetodoPago = (MetodoPago)command.MetodoPago,
-            Notas = command.Notas,
-            Estado = EstadoVenta.Completada
-        };
-
-        decimal subtotal = 0;
-        foreach (var detalle in command.Detalles)
-        {
-            var producto = productos[detalle.ProductoId];
-            var precioUnitario = producto.PrecioVenta;
-            var subtotalDetalle = precioUnitario * detalle.Cantidad;
-            subtotal += subtotalDetalle;
-
-            producto.Stock -= detalle.Cantidad;
-            await _productoRepository.UpdateAsync(producto);
-
-            venta.Detalles.Add(new DetalleVenta
+            var venta = new Venta
             {
-                ProductoId = producto.Id,
-                PrecioUnitario = precioUnitario,
-                Cantidad = detalle.Cantidad,
-                Subtotal = subtotalDetalle
-            });
+                ClienteId = command.ClienteId,
+                FechaVenta = DateTime.UtcNow,
+                MetodoPago = (MetodoPago)command.MetodoPago,
+                Notas = command.Notas,
+                Estado = EstadoVenta.Completada
+            };
+
+            decimal subtotal = 0;
+            foreach (var detalle in command.Detalles)
+            {
+                var producto = productos[detalle.ProductoId];
+                var precioUnitario = producto.PrecioVenta;
+                var subtotalDetalle = precioUnitario * detalle.Cantidad;
+                subtotal += subtotalDetalle;
+
+                await _productoRepository.ExecuteSqlAsync(
+                    $"UPDATE Productos SET Stock = Stock - {detalle.Cantidad}, FechaModificacion = datetime('now') WHERE Id = {producto.Id}");
+
+                venta.Detalles.Add(new DetalleVenta
+                {
+                    ProductoId = producto.Id,
+                    PrecioUnitario = precioUnitario,
+                    Cantidad = detalle.Cantidad,
+                    Subtotal = subtotalDetalle
+                });
+            }
+
+            venta.Subtotal = subtotal;
+            venta.Impuestos = subtotal * (command.PorcentajeImpuesto / 100);
+            venta.Total = venta.Subtotal + venta.Impuestos;
+
+            await _ventaRepository.AddAsyncWithoutSave(venta);
+
+            await _context.SaveChangesAsync();
+            await _context.Database.CommitTransactionAsync();
+
+            return MapToDto(venta);
         }
-
-        venta.Subtotal = subtotal;
-        venta.Impuestos = subtotal * (command.PorcentajeImpuesto / 100);
-        venta.Total = venta.Subtotal + venta.Impuestos;
-
-        await _ventaRepository.AddAsync(venta);
-
-        return MapToDto(venta);
+        catch
+        {
+            await _context.Database.RollbackTransactionAsync();
+            throw;
+        }
     }
 
     public async Task CancelarAsync(int id)
     {
-        var venta = await _ventaRepository.GetWithDetailsAsync(id);
-        if (venta == null)
-        {
-            throw new InvalidOperationException($"Venta con ID {id} no encontrada.");
-        }
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        if (venta.Estado == EstadoVenta.Cancelada || venta.Estado == EstadoVenta.Anulada)
+        try
         {
-            throw new InvalidOperationException("Esta venta ya ha sido cancelada o anulada.");
-        }
-
-        foreach (var detalle in venta.Detalles)
-        {
-            var producto = await _productoRepository.GetByIdAsync(detalle.ProductoId);
-            if (producto != null)
+            var venta = await _ventaRepository.GetWithDetailsAsync(id);
+            if (venta == null)
             {
-                producto.Stock += detalle.Cantidad;
-                await _productoRepository.UpdateAsync(producto);
+                throw new InvalidOperationException($"Venta con ID {id} no encontrada.");
             }
-        }
 
-        venta.Estado = EstadoVenta.Cancelada;
-        venta.FechaModificacion = DateTime.UtcNow;
-        await _ventaRepository.UpdateAsync(venta);
+            if (venta.Estado == EstadoVenta.Cancelada || venta.Estado == EstadoVenta.Anulada)
+            {
+                throw new InvalidOperationException("Esta venta ya ha sido cancelada o anulada.");
+            }
+
+            foreach (var detalle in venta.Detalles)
+            {
+                await _productoRepository.ExecuteSqlAsync(
+                    $"UPDATE Productos SET Stock = Stock + {detalle.Cantidad}, FechaModificacion = datetime('now') WHERE Id = {detalle.ProductoId}");
+            }
+
+            venta.Estado = EstadoVenta.Cancelada;
+            venta.FechaModificacion = DateTime.UtcNow;
+            await _ventaRepository.UpdateAsyncWithoutSave(venta);
+
+            await _context.SaveChangesAsync();
+            await _context.Database.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _context.Database.RollbackTransactionAsync();
+            throw;
+        }
     }
 
     public async Task<IEnumerable<VentaDto>> GetByClienteAsync(int clienteId)

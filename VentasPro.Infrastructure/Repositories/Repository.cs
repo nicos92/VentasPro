@@ -46,11 +46,24 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return entity;
     }
 
+    public virtual async Task AddAsyncWithoutSave(T entity)
+    {
+        entity.FechaCreacion = DateTime.UtcNow;
+        entity.Activo = true;
+        await _dbSet.AddAsync(entity);
+    }
+
     public virtual async Task UpdateAsync(T entity)
     {
         entity.FechaModificacion = DateTime.UtcNow;
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
+    }
+
+    public virtual async Task UpdateAsyncWithoutSave(T entity)
+    {
+        entity.FechaModificacion = DateTime.UtcNow;
+        _dbSet.Update(entity);
     }
 
     public virtual async Task DeleteAsync(int id)
@@ -69,5 +82,10 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return predicate == null
             ? await _dbSet.CountAsync()
             : await _dbSet.CountAsync(predicate);
+    }
+
+    public virtual async Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
+    {
+        await _context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
     }
 }

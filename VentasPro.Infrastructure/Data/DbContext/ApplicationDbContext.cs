@@ -1,13 +1,19 @@
 using Microsoft.EntityFrameworkCore;
+using VentasPro.Application.Interfaces;
 using VentasPro.Domain.Entities;
 
 namespace VentasPro.Infrastructure.Data.DbContext;
 
-public class ApplicationDbContext : Microsoft.EntityFrameworkCore.DbContext
+public class ApplicationDbContext : Microsoft.EntityFrameworkCore.DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     public DbSet<Producto> Productos => Set<Producto>();
