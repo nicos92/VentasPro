@@ -1,0 +1,175 @@
+@page "/ventas/detalles/{Id:int}"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Ventas.DTOs
+@inject IVentaService VentaService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+@if (venta == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <div class="mb-3">
+        <a href="/ventas" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4>Venta #@venta.Id</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@venta.FechaVenta.ToString("dd/MM/yyyy HH:mm:ss")</dd>
+
+                        <dt class="col-sm-4">Cliente:</dt>
+                        <dd class="col-sm-8">@venta.ClienteNombre</dd>
+
+                        <dt class="col-sm-4">Método de Pago:</dt>
+                        <dd class="col-sm-8">@venta.MetodoPago</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @GetEstadoBadge(venta.Estado)">@venta.Estado</span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    @if (!string.IsNullOrEmpty(venta.Notas))
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">Notas:</dt>
+                            <dd class="col-sm-8">@venta.Notas</dd>
+                        </dl>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">Detalle de Productos</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detalle in venta.Detalles)
+                    {
+                        <tr>
+                            <td>@detalle.ProductoNombre</td>
+                            <td>@detalle.ProductoCodigo</td>
+                            <td class="text-end">@detalle.PrecioUnitario.ToString("N2")</td>
+                            <td class="text-center">@detalle.Cantidad</td>
+                            <td class="text-end">@detalle.Subtotal.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                        <td class="text-end">@venta.Subtotal.ToString("N2")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Impuestos:</strong></td>
+                        <td class="text-end">@venta.Impuestos.ToString("N2")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong><h5>Total:</h5></strong></td>
+                        <td class="text-end"><h5 class="text-success mb-0">@venta.Total.ToString("N2")</h5></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    @if (venta.Estado != "Cancelada" && venta.Estado != "Anulada")
+    {
+        <div class="mb-3">
+            <button class="btn btn-danger" @onclick="MostrarConfirmacionCancelar">
+                <i class="bi bi-x-circle"></i> Cancelar Venta
+            </button>
+        </div>
+    }
+}
+
+@if (mostrarConfirmacion)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Cancelación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea cancelar esta venta?</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Nota:</strong> El stock de los productos será restaurado.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => mostrarConfirmacion = false">No, Volver</button>
+                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">Sí, Cancelar Venta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private VentaDto? venta;
+    private bool mostrarConfirmacion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarVenta();
+    }
+
+    private async Task CargarVenta()
+    {
+        venta = await VentaService.GetByIdAsync(Id);
+    }
+
+    private string GetEstadoBadge(string estado)
+    {
+        return estado switch
+        {
+            "Completada" => "bg-success",
+            "Pendiente" => "bg-warning",
+            "Cancelada" => "bg-secondary",
+            "Anulada" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private void MostrarConfirmacionCancelar()
+    {
+        mostrarConfirmacion = true;
+    }
+
+    private async Task ConfirmarCancelacion()
+    {
+        await VentaService.CancelarAsync(Id);
+        mostrarConfirmacion = false;
+        await CargarVenta();
+    }
+}

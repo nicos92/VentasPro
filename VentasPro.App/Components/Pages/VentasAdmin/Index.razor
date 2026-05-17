@@ -1,0 +1,288 @@
+@page "/ventas"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Ventas.DTOs
+@using VentasPro.Application.Features.Clientes.DTOs
+@using VentasPro.Domain.Enums
+@inject IVentaService VentaService
+@inject IClienteService ClienteService
+@rendermode InteractiveServer
+
+<h3>Ventas</h3>
+
+<div class="mb-3">
+    <a href="/ventas/nueva" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nueva Venta
+    </a>
+</div>
+
+<EditForm Model="@filtro" OnSubmit="Filtrar" FormName="filtroVentasForm">
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
+        <div>
+            <label class="form-label">Fecha Inicio</label>
+            <InputDate @bind-Value="filtro.FechaInicio" class="form-control" />
+        </div>
+        <div>
+            <label class="form-label">Fecha Fin</label>
+            <InputDate @bind-Value="filtro.FechaFin" class="form-control" />
+        </div>
+        <div>
+            <label class="form-label">Cliente</label>
+            <InputSelect @bind-Value="filtro.ClienteId" class="form-select">
+                <option value="0">Todos</option>
+                @if (clientes != null)
+                {
+                    @foreach (var cli in clientes)
+                    {
+                        <option value="@cli.Id">@cli.NombreCompleto</option>
+                    }
+                }
+            </InputSelect>
+        </div>
+        <div>
+            <label class="form-label">Estado</label>
+            <InputSelect @bind-Value="filtro.Estado" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Completada">Completada</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="Anulada">Anulada</option>
+            </InputSelect>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+    </div>
+</EditForm>
+
+@if (ventasOriginal == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!ventas.Any())
+{
+    <div class="alert alert-info">No se encontraron ventas.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.Id))">
+                    # <i class="@GetSortIcon(nameof(VentaDto.Id))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.FechaVenta))">
+                    Fecha <i class="@GetSortIcon(nameof(VentaDto.FechaVenta))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.ClienteNombre))">
+                    Cliente <i class="@GetSortIcon(nameof(VentaDto.ClienteNombre))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.Total))">
+                    Total <i class="@GetSortIcon(nameof(VentaDto.Total))"></i>
+                </th>
+                <th>Estado</th>
+                <th>Método Pago</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var venta in ventas)
+            {
+                <tr>
+                    <td>@venta.Id</td>
+                    <td>@venta.FechaVenta.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@venta.ClienteNombre</td>
+                    <td>@venta.Total.ToString("N2")</td>
+                    <td>
+                        <span class="badge @GetEstadoBadge(venta.Estado)">
+                            @venta.Estado
+                        </span>
+                    </td>
+                    <td>@venta.MetodoPago</td>
+                    <td>
+                        <a href="/ventas/detalles/@venta.Id" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        @if (venta.Estado != "Cancelada" && venta.Estado != "Anulada")
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => MostrarConfirmacionCancelar(venta.Id)">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="text-muted">
+        Mostrando @ventas.Count() de @ventasOriginal.Count() ventas
+    </div>
+}
+
+@if (mostrarConfirmacion)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Cancelación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea cancelar esta venta?</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Nota:</strong> El stock de los productos será restaurado.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => mostrarConfirmacion = false">No, Volver</button>
+                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">Sí, Cancelar Venta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<VentaDto>? ventasOriginal;
+    private IEnumerable<VentaDto>? ventas;
+    private IEnumerable<ClienteDto>? clientes;
+    private FiltroVenta filtro = new();
+    private bool mostrarConfirmacion = false;
+    private int ventaACancelar = 0;
+    
+    private string columnaOrden = nameof(VentaDto.FechaVenta);
+    private bool ascendente = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarVentas();
+        await CargarClientes();
+    }
+
+    private async Task CargarClientes()
+    {
+        clientes = await ClienteService.GetAllAsync(true);
+    }
+
+    private async Task CargarVentas()
+    {
+        IEnumerable<VentaDto>? resultado;
+
+        if (filtro.FechaInicio.HasValue || filtro.FechaFin.HasValue || filtro.ClienteId > 0)
+        {
+            if (filtro.FechaInicio.HasValue && filtro.FechaFin.HasValue)
+            {
+                resultado = await VentaService.GetByDateRangeAsync(filtro.FechaInicio.Value, filtro.FechaFin.Value);
+            }
+            else if (filtro.ClienteId > 0)
+            {
+                resultado = await VentaService.GetByClienteAsync(filtro.ClienteId);
+            }
+            else
+            {
+                resultado = await VentaService.GetAllAsync();
+            }
+        }
+        else if (filtro.Estado != "todos")
+        {
+            var estado = Enum.Parse<EstadoVenta>(filtro.Estado);
+            resultado = await VentaService.GetByEstadoAsync(estado);
+        }
+        else
+        {
+            resultado = await VentaService.GetAllAsync();
+        }
+
+        ventasOriginal = resultado;
+        AplicarFiltroYOrden();
+    }
+
+    private void AplicarFiltroYOrden()
+    {
+        IEnumerable<VentaDto>? resultado = ventasOriginal;
+
+        if (filtro.Estado != "todos")
+        {
+            resultado = resultado?.Where(v => v.Estado == filtro.Estado);
+        }
+
+        resultado = columnaOrden switch
+        {
+            nameof(VentaDto.Id) => ascendente 
+                ? resultado?.OrderBy(v => v.Id) 
+                : resultado?.OrderByDescending(v => v.Id),
+            nameof(VentaDto.ClienteNombre) => ascendente 
+                ? resultado?.OrderBy(v => v.ClienteNombre) 
+                : resultado?.OrderByDescending(v => v.ClienteNombre),
+            nameof(VentaDto.Total) => ascendente 
+                ? resultado?.OrderBy(v => v.Total) 
+                : resultado?.OrderByDescending(v => v.Total),
+            _ => ascendente 
+                ? resultado?.OrderBy(v => v.FechaVenta) 
+                : resultado?.OrderByDescending(v => v.FechaVenta)
+        };
+
+        ventas = resultado;
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
+        {
+            ascendente = !ascendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ascendente = false;
+        }
+        AplicarFiltroYOrden();
+    }
+
+    private string GetSortIcon(string columna)
+    {
+        if (columnaOrden != columna)
+            return "bi bi-chevron-expand text-muted";
+
+        return ascendente ? "bi bi-chevron-up" : "bi bi-chevron-down";
+    }
+
+    private string GetEstadoBadge(string estado)
+    {
+        return estado switch
+        {
+            "Completada" => "bg-success",
+            "Pendiente" => "bg-warning",
+            "Cancelada" => "bg-secondary",
+            "Anulada" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private async Task Filtrar()
+    {
+        await CargarVentas();
+    }
+
+    private void MostrarConfirmacionCancelar(int id)
+    {
+        ventaACancelar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private async Task ConfirmarCancelacion()
+    {
+        await VentaService.CancelarAsync(ventaACancelar);
+        mostrarConfirmacion = false;
+        await CargarVentas();
+    }
+
+    private class FiltroVenta
+    {
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
+        public int ClienteId { get; set; }
+        public string Estado { get; set; } = "todos";
+    }
+}
