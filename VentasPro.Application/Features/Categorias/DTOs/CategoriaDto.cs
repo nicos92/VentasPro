@@ -1,4 +1,4 @@
-namespace VentasPro.Application.Features.Clientes.DTOs;
+namespace VentasPro.Application.Features.Categorias.DTOs;
 
 public class CategoriaDto
 {

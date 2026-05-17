@@ -2,7 +2,7 @@
 @using VentasPro.Application.Interfaces
 @using VentasPro.Application.Features.Productos.Commands
 @using VentasPro.Application.Features.Productos.DTOs
-@using VentasPro.Application.Features.Clientes.DTOs
+@using VentasPro.Application.Features.Categorias.DTOs
 @inject IProductoService ProductoService
 @inject ICategoriaService CategoriaService
 @inject NavigationManager NavigationManager
@@ -76,7 +76,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        categorias = await CategoriaService.GetAllAsync();
+        categorias = await CategoriaService.GetAllAsync(true);
     }
 
     private async Task HandleValidSubmit()

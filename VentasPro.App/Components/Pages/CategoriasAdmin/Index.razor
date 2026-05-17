@@ -1,0 +1,202 @@
+@page "/categorias"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Categorias.DTOs
+@inject ICategoriaService CategoriaService
+@rendermode InteractiveServer
+
+<h3>Categorías</h3>
+
+<EditForm Model="@filtro" OnSubmit="Filtrar" FormName="filtroCategoriasForm">
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
+        <div class="flex-grow-1" style="min-width: 250px;">
+            <label class="form-label">Buscar</label>
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre o descripción..." />
+        </div>
+        
+        <div>
+            <label class="form-label">Estado</label>
+            <InputSelect @bind-Value="filtro.Estado" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="activos">Solo Activos</option>
+                <option value="inactivos">Solo Inactivos</option>
+            </InputSelect>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+        
+        <a href="/categorias/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
+</EditForm>
+
+@if (categoriasOriginal == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!categorias.Any())
+{
+    <div class="alert alert-info">No se encontraron categorías.</div>
+}
+else
+{
+    <table class="table table-striped col-12 mt-3">
+        <thead>
+            <tr>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(CategoriaDto.Nombre))">
+                    Nombre <i class="@GetSortIcon(nameof(CategoriaDto.Nombre))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(CategoriaDto.Descripcion))">
+                    Descripción <i class="@GetSortIcon(nameof(CategoriaDto.Descripcion))"></i>
+                </th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var categoria in categorias)
+            {
+                <tr class="@(categoria.Activo ? "" : "table-secondary")">
+                    <td>@categoria.Nombre</td>
+                    <td>@categoria.Descripcion</td>
+                    <td>
+                        <span class="badge @(categoria.Activo ? "bg-success" : "bg-secondary")">
+                            @(categoria.Activo ? "Activo" : "Inactivo")
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/categorias/editar/@categoria.Id" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        @if (categoria.Activo)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(categoria.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => Activar(categoria.Id)">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="text-muted">
+        Mostrando @categorias.Count() de @categoriasOriginal.Count() categorías
+    </div>
+}
+
+<style>
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    th.sortable:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    private IEnumerable<CategoriaDto>? categoriasOriginal;
+    private IEnumerable<CategoriaDto>? categorias;
+    private FiltroCategoria filtro = new();
+    
+    private string columnaOrden = "Nombre";
+    private bool ascendente = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategorias();
+    }
+
+    private async Task CargarCategorias()
+    {
+        bool? soloActivos = filtro.Estado switch
+        {
+            "activos" => true,
+            "inactivos" => false,
+            _ => null
+        };
+
+        categoriasOriginal = await CategoriaService.GetAllAsync(soloActivos);
+        AplicarFiltroYOrden();
+    }
+
+    private void AplicarFiltroYOrden()
+    {
+        IEnumerable<CategoriaDto>? resultado = categoriasOriginal;
+
+        if (!string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
+        {
+            var termino = filtro.TextoBusqueda.ToLower().Trim();
+            resultado = resultado?.Where(c =>
+                (c.Nombre != null && c.Nombre.ToLower().Contains(termino)) ||
+                (c.Descripcion != null && c.Descripcion.ToLower().Contains(termino))
+            );
+        }
+
+        resultado = columnaOrden switch
+        {
+            nameof(CategoriaDto.Descripcion) => ascendente 
+                ? resultado?.OrderBy(c => c.Descripcion) 
+                : resultado?.OrderByDescending(c => c.Descripcion),
+            _ => ascendente 
+                ? resultado?.OrderBy(c => c.Nombre) 
+                : resultado?.OrderByDescending(c => c.Nombre)
+        };
+
+        categorias = resultado;
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
+        {
+            ascendente = !ascendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ascendente = true;
+        }
+        AplicarFiltroYOrden();
+    }
+
+    private string GetSortIcon(string columna)
+    {
+        if (columnaOrden != columna)
+            return "bi bi-chevron-expand text-muted";
+
+        return ascendente ? "bi bi-chevron-up" : "bi bi-chevron-down";
+    }
+
+    private async Task Filtrar()
+    {
+        await CargarCategorias();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await CategoriaService.DeleteAsync(id);
+        await CargarCategorias();
+    }
+
+    private async Task Activar(int id)
+    {
+        await CategoriaService.ActivateAsync(id);
+        await CargarCategorias();
+    }
+
+    private class FiltroCategoria
+    {
+        public string TextoBusqueda { get; set; } = string.Empty;
+        public string Estado { get; set; } = "todos";
+    }
+}

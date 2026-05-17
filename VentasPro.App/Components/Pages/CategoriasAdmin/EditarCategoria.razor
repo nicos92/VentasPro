@@ -1,0 +1,73 @@
+@page "/categorias/editar/{Id:int}"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Categorias.Commands
+@using VentasPro.Application.Features.Categorias.DTOs
+@inject ICategoriaService CategoriaService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Editar Categoría</h3>
+
+@if (command == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <EditForm Model="@command" OnValidSubmit="HandleValidSubmit" FormName="editarCategoriaForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText @bind-Value="command.Nombre" class="form-control" />
+            <ValidationMessage For="@(() => command.Nombre)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <InputTextArea @bind-Value="command.Descripcion" class="form-control" rows="3" />
+            <ValidationMessage For="@(() => command.Descripcion)" />
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar
+            </button>
+            <a href="/categorias" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UpdateCategoriaCommand? command;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var categoria = await CategoriaService.GetByIdAsync(Id);
+
+        if (categoria != null)
+        {
+            command = new UpdateCategoriaCommand
+            {
+                Id = categoria.Id,
+                Nombre = categoria.Nombre,
+                Descripcion = categoria.Descripcion
+            };
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (command != null)
+        {
+            await CategoriaService.UpdateAsync(command);
+            NavigationManager.NavigateTo("/categorias");
+        }
+    }
+}

@@ -1,0 +1,44 @@
+@page "/categorias/nuevo"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Categorias.Commands
+@inject ICategoriaService CategoriaService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Nueva Categoría</h3>
+
+<EditForm Model="@command" OnValidSubmit="HandleValidSubmit" FormName="crearCategoriaForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <InputText @bind-Value="command.Nombre" class="form-control" />
+        <ValidationMessage For="@(() => command.Nombre)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <InputTextArea @bind-Value="command.Descripcion" class="form-control" rows="3" />
+        <ValidationMessage For="@(() => command.Descripcion)" />
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Guardar
+        </button>
+        <a href="/categorias" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+    </div>
+</EditForm>
+
+@code {
+    private CreateCategoriaCommand command = new();
+
+    private async Task HandleValidSubmit()
+    {
+        await CategoriaService.CreateAsync(command);
+        NavigationManager.NavigateTo("/categorias");
+    }
+}
