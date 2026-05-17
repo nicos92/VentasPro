@@ -6,31 +6,43 @@
 
 <h3>Productos</h3>
 
-<div class="mb-3 d-flex gap-2">
-    <select class="form-select w-auto" @bind="filtroActivos">
-        <option value="todos">Todos</option>
-        <option value="activos">Solo Activos</option>
-        <option value="inactivos">Solo Inactivos</option>
-    </select>
-    <button class="btn btn-secondary" @onclick="Filtrar">
-        <i class="bi bi-funnel"></i> Filtrar
-    </button>
-    <a href="/productos/nuevo" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo Producto
-    </a>
-</div>
+<EditForm Model="@filtro" OnSubmit="Filtrar" FormName="filtroProductosForm">
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
+        <div class="flex-grow-1" style="min-width: 250px;">
+            <label class="form-label">Buscar</label>
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre o código de barras..." />
+        </div>
+        
+        <div>
+            <label class="form-label">Estado</label>
+            <InputSelect @bind-Value="filtro.Estado" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="activos">Solo Activos</option>
+                <option value="inactivos">Solo Inactivos</option>
+            </InputSelect>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+        
+        <a href="/productos/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
+</EditForm>
 
-@if (productos == null)
+@if (productosOriginal == null)
 {
     <p><em>Cargando...</em></p>
 }
 else if (!productos.Any())
 {
-    <div class="alert alert-info">No hay productos registrados.</div>
+    <div class="alert alert-info">No se encontraron productos.</div>
 }
 else
 {
-    <table class="table table-striped col-12">
+    <table class="table table-striped col-12 mt-3">
         <thead>
             <tr>
                 <th>Código</th>
@@ -75,11 +87,16 @@ else
             }
         </tbody>
     </table>
+    
+    <div class="text-muted">
+        Mostrando @productos.Count() de @productosOriginal.Count() productos
+    </div>
 }
 
 @code {
+    private IEnumerable<ProductoDto>? productosOriginal;
     private IEnumerable<ProductoDto>? productos;
-    private string filtroActivos = "todos";
+    private FiltroProducto filtro = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,14 +105,31 @@ else
 
     private async Task CargarProductos()
     {
-        bool? soloActivos = filtroActivos switch
+        bool? soloActivos = filtro.Estado switch
         {
             "activos" => true,
             "inactivos" => false,
             _ => null
         };
 
-        productos = await ProductoService.GetAllAsync(soloActivos);
+        productosOriginal = await ProductoService.GetAllAsync(soloActivos);
+        AplicarFiltro();
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
+        {
+            productos = productosOriginal;
+        }
+        else
+        {
+            var termino = filtro.TextoBusqueda.ToLower().Trim();
+            productos = productosOriginal?.Where(p =>
+                (p.Nombre != null && p.Nombre.ToLower().Contains(termino)) ||
+                (p.CodigoBarras != null && p.CodigoBarras.ToLower().Contains(termino))
+            );
+        }
     }
 
     private async Task Filtrar()
@@ -113,5 +147,11 @@ else
     {
         await ProductoService.ActivateAsync(id);
         await CargarProductos();
+    }
+
+    private class FiltroProducto
+    {
+        public string TextoBusqueda { get; set; } = string.Empty;
+        public string Estado { get; set; } = "todos";
     }
 }
