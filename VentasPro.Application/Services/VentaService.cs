@@ -68,11 +68,6 @@ public class VentaService : IVentaService
             {
                 throw new InvalidOperationException($"El producto '{producto.Nombre}' no está activo.");
             }
-
-            if (producto.Stock < detalle.Cantidad)
-            {
-                throw new InvalidOperationException($"El producto '{producto.Nombre}' no tiene stock suficiente. Disponible: {producto.Stock}");
-            }
         }
 
         var venta = new Venta

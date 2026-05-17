@@ -88,7 +88,7 @@ else
                                     <td>@producto?.Nombre</td>
                                     <td>@producto?.Precio.ToString("N2")</td>
                                     <td>
-                                        <input type="number" min="1" max="@producto?.Stock" value="@detalle.Cantidad"
+                                        <input type="number" min="1" value="@detalle.Cantidad"
                                                @oninput="(e) => ActualizarCantidad(index, e)" class="form-control form-control-sm"
                                                style="width: 80px;" />
                                         <small class="text-muted">Stock: @producto?.Stock</small>
@@ -109,7 +109,7 @@ else
                     <div class="col-md-6">
                         <select class="form-select" @bind="productoSeleccionadoId">
                             <option value="0">-- Seleccionar Producto --</option>
-                            @foreach (var prod in productos.Where(p => p.Stock > 0))
+                            @foreach (var prod in productos)
                             {
                                 <option value="@prod.Id">@prod.Nombre - Stock: @prod.Stock - $@prod.Precio.ToString("N2")
                                 </option>
@@ -235,22 +235,10 @@ else
             return;
         }
 
-        if (producto.Stock < cantidadAgregar)
-        {
-            mensajeErrorProducto = $"Stock insuficiente. Disponible: {producto.Stock}";
-            return;
-        }
-
         var detalleExistente = command.Detalles.FirstOrDefault(d => d.ProductoId == productoSeleccionadoId);
         if (detalleExistente != null)
         {
-            var nuevaCantidad = detalleExistente.Cantidad + cantidadAgregar;
-            if (nuevaCantidad > producto.Stock)
-            {
-                mensajeErrorProducto = $"Stock insuficiente. Disponible: {producto.Stock}";
-                return;
-            }
-            detalleExistente.Cantidad = nuevaCantidad;
+            detalleExistente.Cantidad += cantidadAgregar;
         }
         else
         {
@@ -279,12 +267,7 @@ else
         {
             if (int.TryParse(e.Value?.ToString(), out int nuevaCantidad) && nuevaCantidad > 0)
             {
-                var detalle = command.Detalles[index];
-                var producto = productos?.FirstOrDefault(p => p.Id == detalle.ProductoId);
-                if (producto != null && nuevaCantidad <= producto.Stock)
-                {
-                    command.Detalles[index].Cantidad = nuevaCantidad;
-                }
+                command.Detalles[index].Cantidad = nuevaCantidad;
             }
         }
     }

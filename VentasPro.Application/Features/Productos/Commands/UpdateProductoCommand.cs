@@ -19,7 +19,6 @@ public class UpdateProductoCommand
     public decimal Precio { get; set; }
 
     [Required(ErrorMessage = "El campo Stock es requerido.")]
-    [Range(0, int.MaxValue, ErrorMessage = "El campo Stock debe ser un valor positivo.")]
     public int Stock { get; set; }
 
     [StringLength(50, ErrorMessage = "El campo Código de Barras debe tener como máximo 50 caracteres.")]
