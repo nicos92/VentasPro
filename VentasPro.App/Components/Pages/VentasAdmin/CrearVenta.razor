@@ -104,8 +104,23 @@ else
                     </table>
                 }
 
-                <div class="row g-2 mt-2">
-                    <div class="col-md-6">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Código de Barras</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" @oninput="ProcesarCodigoBarras"
+                                   placeholder="Escanear código de barras" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="LimpiarCodigoBarras">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrEmpty(mensajeErrorBarcode))
+                        {
+                            <small class="text-danger">@mensajeErrorBarcode</small>
+                        }
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar Producto</label>
                         <select class="form-select" @bind="productoSeleccionadoId">
                             <option value="0">-- Seleccionar Producto --</option>
                             @foreach (var prod in productos)
@@ -115,11 +130,12 @@ else
                             }
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <input type="number" class="form-control" @bind="cantidadAgregar" min="1" placeholder="Cantidad" />
+                    <div class="col-md-2">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" class="form-control" @bind="cantidadAgregar" min="1" />
                     </div>
-                    <div class="col-md-3">
-                        <button type="button" class="btn btn-primary" @onclick="AgregarProducto">
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" @onclick="AgregarProducto">
                             <i class="bi bi-plus-circle"></i> Agregar
                         </button>
                     </div>
@@ -191,10 +207,13 @@ else
     private CreateVentaCommand command = new();
     private IEnumerable<ProductoDto>? productos;
     private IEnumerable<ClienteDto>? clientes;
+    private Dictionary<string, ProductoDto> productosPorCodigo = new();
     private int productoSeleccionadoId = 0;
     private int cantidadAgregar = 1;
     private string? mensajeError;
     private string? mensajeErrorProducto;
+    private string? mensajeErrorBarcode;
+    private string codigoBarras = string.Empty;
 
     private decimal Subtotal => command.Detalles.Sum(d =>
     {
@@ -209,11 +228,16 @@ else
     {
         productos = await ProductoService.GetAllAsync(true);
         clientes = await ClienteService.GetAllAsync(true);
+
+        productosPorCodigo = productos!
+                    .Where(p => !string.IsNullOrWhiteSpace(p.CodigoBarras))
+                    .ToDictionary(p => p.CodigoBarras!.Trim().ToUpper(), p => p);
     }
 
     private void AgregarProducto()
     {
         mensajeErrorProducto = null;
+        mensajeErrorBarcode = null;
 
         if (productoSeleccionadoId == 0)
         {
@@ -234,22 +258,53 @@ else
             return;
         }
 
-        var detalleExistente = command.Detalles.FirstOrDefault(d => d.ProductoId == productoSeleccionadoId);
+        AgregarProductoALista(producto.Id, cantidadAgregar);
+        productoSeleccionadoId = 0;
+        cantidadAgregar = 1;
+    }
+
+    private void ProcesarCodigoBarras(ChangeEventArgs e)
+    {
+        var valor = e.Value?.ToString() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(valor))
+        {
+            mensajeErrorBarcode = null;
+            return;
+        }
+
+        var codigoNormalizado = valor.Trim().ToUpper();
+
+        if (productosPorCodigo.TryGetValue(codigoNormalizado, out var producto))
+        {
+            mensajeErrorBarcode = null;
+            AgregarProductoALista(producto.Id, cantidadAgregar > 0 ? cantidadAgregar : 1);
+            codigoBarras = string.Empty;
+            cantidadAgregar = 1;
+        }
+    }
+
+    private void LimpiarCodigoBarras()
+    {
+        codigoBarras = string.Empty;
+        mensajeErrorBarcode = null;
+    }
+
+    private void AgregarProductoALista(int productoId, int cantidad)
+    {
+        var detalleExistente = command.Detalles.FirstOrDefault(d => d.ProductoId == productoId);
         if (detalleExistente != null)
         {
-            detalleExistente.Cantidad += cantidadAgregar;
+            detalleExistente.Cantidad += cantidad;
         }
         else
         {
             command.Detalles.Add(new DetalleVentaItem
             {
-                ProductoId = productoSeleccionadoId,
-                Cantidad = cantidadAgregar
+                ProductoId = productoId,
+                Cantidad = cantidad
             });
         }
-
-        productoSeleccionadoId = 0;
-        cantidadAgregar = 1;
     }
 
     private void RemoverDetalle(int index)

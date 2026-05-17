@@ -73,9 +73,6 @@ else
                 <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.FechaVenta))">
                     Fecha <i class="@GetSortIcon(nameof(VentaDto.FechaVenta))"></i>
                 </th>
-                <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.ClienteNombre))">
-                    Cliente <i class="@GetSortIcon(nameof(VentaDto.ClienteNombre))"></i>
-                </th>
                 <th class="sortable" @onclick="() => OrdenarPor(nameof(VentaDto.Total))">
                     Total <i class="@GetSortIcon(nameof(VentaDto.Total))"></i>
                 </th>
@@ -90,7 +87,6 @@ else
                 <tr>
                     <td>@venta.Id</td>
                     <td>@venta.FechaVenta.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@venta.ClienteNombre</td>
                     <td>@venta.Total.ToString("N2")</td>
                     <td>
                         <span class="badge @GetEstadoBadge(venta.Estado)">
@@ -113,7 +109,7 @@ else
             }
         </tbody>
     </table>
-    
+
     <div class="text-muted">
         Mostrando @ventas.Count() de @ventasOriginal.Count() ventas
     </div>
@@ -150,7 +146,7 @@ else
     private FiltroVenta filtro = new();
     private bool mostrarConfirmacion = false;
     private int ventaACancelar = 0;
-    
+
     private string columnaOrden = nameof(VentaDto.FechaVenta);
     private bool ascendente = false;
 
@@ -209,17 +205,17 @@ else
 
         resultado = columnaOrden switch
         {
-            nameof(VentaDto.Id) => ascendente 
-                ? resultado?.OrderBy(v => v.Id) 
+            nameof(VentaDto.Id) => ascendente
+                ? resultado?.OrderBy(v => v.Id)
                 : resultado?.OrderByDescending(v => v.Id),
-            nameof(VentaDto.ClienteNombre) => ascendente 
-                ? resultado?.OrderBy(v => v.ClienteNombre) 
+            nameof(VentaDto.ClienteNombre) => ascendente
+                ? resultado?.OrderBy(v => v.ClienteNombre)
                 : resultado?.OrderByDescending(v => v.ClienteNombre),
-            nameof(VentaDto.Total) => ascendente 
-                ? resultado?.OrderBy(v => v.Total) 
+            nameof(VentaDto.Total) => ascendente
+                ? resultado?.OrderBy(v => v.Total)
                 : resultado?.OrderByDescending(v => v.Total),
-            _ => ascendente 
-                ? resultado?.OrderBy(v => v.FechaVenta) 
+            _ => ascendente
+                ? resultado?.OrderBy(v => v.FechaVenta)
                 : resultado?.OrderByDescending(v => v.FechaVenta)
         };
 
