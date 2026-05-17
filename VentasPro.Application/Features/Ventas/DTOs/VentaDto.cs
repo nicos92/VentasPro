@@ -14,8 +14,8 @@ public class DetalleVentaDto
 public class VentaDto
 {
     public int Id { get; set; }
-    public int ClienteId { get; set; }
-    public string ClienteNombre { get; set; } = string.Empty;
+    public int? ClienteId { get; set; }
+    public string ClienteNombre { get; set; } = "Consumidor Final";
     public DateTime FechaVenta { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Impuestos { get; set; }

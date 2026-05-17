@@ -46,10 +46,13 @@ public class VentaService : IVentaService
 
     public async Task<VentaDto> CreateAsync(CreateVentaCommand command)
     {
-        var cliente = await _clienteRepository.GetByIdAsync(command.ClienteId);
-        if (cliente == null || !cliente.Activo)
+        if (command.ClienteId.HasValue)
         {
-            throw new InvalidOperationException("El cliente seleccionado no existe o no está activo.");
+            var cliente = await _clienteRepository.GetByIdAsync(command.ClienteId.Value);
+            if (cliente == null || !cliente.Activo)
+            {
+                throw new InvalidOperationException("El cliente seleccionado no existe o no está activo.");
+            }
         }
 
         var productosIds = command.Detalles.Select(d => d.ProductoId).Distinct().ToList();

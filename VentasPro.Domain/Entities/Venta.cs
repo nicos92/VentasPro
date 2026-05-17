@@ -4,7 +4,7 @@ namespace VentasPro.Domain.Entities;
 
 public class Venta : BaseEntity
 {
-    public int ClienteId { get; set; }
+    public int? ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
     public DateTime FechaVenta { get; set; } = DateTime.UtcNow;
     public decimal Subtotal { get; set; }

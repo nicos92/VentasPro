@@ -4,8 +4,7 @@ namespace VentasPro.Application.Features.Ventas.Commands;
 
 public class CreateVentaCommand
 {
-    [Required(ErrorMessage = "Debe seleccionar un cliente.")]
-    public int ClienteId { get; set; }
+    public int? ClienteId { get; set; }
 
     public string? Notas { get; set; }
 
