@@ -1,7 +1,8 @@
 @page "/productos"
-@using VentasPro.Domain.Repositories
-@using VentasPro.Domain.Entities
-@inject IProductoRepository ProductoRepository
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Productos.DTOs
+@inject IProductoService ProductoService
+@rendermode InteractiveServer
 
 <h3>Productos</h3>
 
@@ -40,7 +41,7 @@ else
                     <td>@producto.Descripcion</td>
                     <td>@producto.Precio.ToString("C")</td>
                     <td>@producto.Stock</td>
-                    <td>@producto.Categoria?.Nombre</td>
+                    <td>@producto.CategoriaNombre</td>
                     <td>
                         <a href="/productos/editar/@producto.Id" class="btn btn-sm btn-warning">Editar</a>
                         <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(producto.Id)">Eliminar</button>
@@ -52,16 +53,21 @@ else
 }
 
 @code {
-    private IEnumerable<Producto>? productos;
+    private IEnumerable<ProductoDto>? productos;
 
     protected override async Task OnInitializedAsync()
     {
-        productos = await ProductoRepository.GetAllAsync();
+        await CargarProductos();
+    }
+
+    private async Task CargarProductos()
+    {
+        productos = await ProductoService.GetAllAsync();
     }
 
     private async Task Eliminar(int id)
     {
-        await ProductoRepository.DeleteAsync(id);
-        productos = await ProductoRepository.GetAllAsync();
+        await ProductoService.DeleteAsync(id);
+        await CargarProductos();
     }
 }

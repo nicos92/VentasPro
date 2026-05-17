@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace VentasPro.Domain.Entities;
 
 public class Cliente : BaseEntity
@@ -8,7 +10,9 @@ public class Cliente : BaseEntity
     public string? Telefono { get; set; }
     public string? Direccion { get; set; }
     public string? Identificacion { get; set; }
+
     public ICollection<Venta> Ventas { get; set; } = new List<Venta>();
 
+    [NotMapped]
     public string NombreCompleto => $"{Nombre} {Apellido}";
 }
