@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "blazor": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "blazor/SKILL.md",
+      "computedHash": "47c8ca05bf9eaaca171c87d038b28ed609b361f86b48de27fcc58af4fa04528a"
+    },
+    "blazor-expert": {
+      "source": "markpitt/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/blazor-expert/SKILL.md",
+      "computedHash": "00d1b81b5cd6eaa9f8694167cec3f0ac1b6026ff01f18103dbfaa486503f331c"
+    },
+    "clean-architecture": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "clean-architecture/SKILL.md",
+      "computedHash": "df8076799cc198bfab130f1069cea4755c85fadcdc3c03463ee1c24e4ebbf399"
+    },
+    "clean-code": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "clean-code/SKILL.md",
+      "computedHash": "dc73cc8aa37a237bd23822b5e58be6e8a83c1ee73688572dfac7580154fb6c1a"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="VentasPro.App/VentasPro.App.csproj" />
+  <Project Path="VentasPro.Application/VentasPro.Application.csproj" />
+  <Project Path="VentasPro.Domain/VentasPro.Domain.csproj" />
+  <Project Path="VentasPro.Infrastructure/VentasPro.Infrastructure.csproj" />
+</Solution>

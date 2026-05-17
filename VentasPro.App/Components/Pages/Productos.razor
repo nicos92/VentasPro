@@ -1,0 +1,67 @@
+@page "/productos"
+@using VentasPro.Domain.Repositories
+@using VentasPro.Domain.Entities
+@inject IProductoRepository ProductoRepository
+
+<h3>Productos</h3>
+
+<div class="mb-3">
+    <a href="/productos/nuevo" class="btn btn-primary">Nuevo Producto</a>
+</div>
+
+@if (productos == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!productos.Any())
+{
+    <div class="alert alert-info">No hay productos registrados.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var producto in productos)
+            {
+                <tr>
+                    <td>@producto.CodigoBarras</td>
+                    <td>@producto.Nombre</td>
+                    <td>@producto.Descripcion</td>
+                    <td>@producto.Precio.ToString("C")</td>
+                    <td>@producto.Stock</td>
+                    <td>@producto.Categoria?.Nombre</td>
+                    <td>
+                        <a href="/productos/editar/@producto.Id" class="btn btn-sm btn-warning">Editar</a>
+                        <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(producto.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<Producto>? productos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        productos = await ProductoRepository.GetAllAsync();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await ProductoRepository.DeleteAsync(id);
+        productos = await ProductoRepository.GetAllAsync();
+    }
+}
