@@ -15,7 +15,7 @@ public class CreateVentaCommand
     [MinLength(1, ErrorMessage = "Debe agregar al menos un producto a la venta.")]
     public List<DetalleVentaItem> Detalles { get; set; } = new();
 
-    public decimal PorcentajeImpuesto { get; set; } = 16m;
+    public decimal PorcentajeImpuesto { get; set; } = 0m;
 }
 
 public class DetalleVentaItem
