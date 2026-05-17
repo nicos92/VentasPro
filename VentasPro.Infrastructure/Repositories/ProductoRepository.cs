@@ -16,6 +16,16 @@ public class ProductoRepository : Repository<Producto>, IProductoRepository
         return await _dbSet.FirstOrDefaultAsync(p => p.CodigoBarras == codigoBarras && p.Activo);
     }
 
+    public async Task<bool> CodigoBarrasExistsAsync(string codigoBarras, int? excludeId = null)
+    {
+        var query = _dbSet.Where(p => p.CodigoBarras == codigoBarras && p.Activo);
+        if (excludeId.HasValue)
+        {
+            query = query.Where(p => p.Id != excludeId.Value);
+        }
+        return await query.AnyAsync();
+    }
+
     public async Task<IEnumerable<Producto>> GetByCategoriaAsync(int categoriaId)
     {
         return await _dbSet

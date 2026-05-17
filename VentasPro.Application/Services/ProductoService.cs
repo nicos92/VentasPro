@@ -36,6 +36,15 @@ public class ProductoService : IProductoService
 
     public async Task<ProductoDto> CreateAsync(CreateProductoCommand command)
     {
+        if (!string.IsNullOrWhiteSpace(command.CodigoBarras))
+        {
+            var existe = await _productoRepository.CodigoBarrasExistsAsync(command.CodigoBarras);
+            if (existe)
+            {
+                throw new InvalidOperationException($"El código de barras '{command.CodigoBarras}' ya está registrado.");
+            }
+        }
+
         var producto = new Producto
         {
             Nombre = command.Nombre,
@@ -54,6 +63,15 @@ public class ProductoService : IProductoService
     {
         var producto = await _productoRepository.GetByIdAsync(command.Id)
             ?? throw new InvalidOperationException($"Producto con ID {command.Id} no encontrado.");
+
+        if (!string.IsNullOrWhiteSpace(command.CodigoBarras))
+        {
+            var existe = await _productoRepository.CodigoBarrasExistsAsync(command.CodigoBarras, command.Id);
+            if (existe)
+            {
+                throw new InvalidOperationException($"El código de barras '{command.CodigoBarras}' ya está registrado.");
+            }
+        }
 
         producto.Nombre = command.Nombre;
         producto.Descripcion = command.Descripcion;

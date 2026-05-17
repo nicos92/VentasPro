@@ -74,6 +74,13 @@ else
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
         </div>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> @mensajeError
+            </div>
+        }
     </EditForm>
 }
 
@@ -108,8 +115,21 @@ else
     {
         if (command != null)
         {
-            await ProductoService.UpdateAsync(command);
-            NavigationManager.NavigateTo("/productos");
+            try
+            {
+                await ProductoService.UpdateAsync(command);
+                NavigationManager.NavigateTo("/productos");
+            }
+            catch (InvalidOperationException ex)
+            {
+                mensajeError = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                mensajeError = "Ocurrió un error al guardar el producto.";
+            }
         }
     }
+
+    private string? mensajeError;
 }

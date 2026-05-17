@@ -68,12 +68,19 @@
             <i class="bi bi-x-circle"></i> Cancelar
         </a>
     </div>
+
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @mensajeError
+        </div>
+    }
 </EditForm>
 
 @code {
+
     private CreateProductoCommand command = new();
     private IEnumerable<CategoriaDto>? categorias;
-
     protected override async Task OnInitializedAsync()
     {
         categorias = await CategoriaService.GetAllAsync(true);
@@ -81,7 +88,20 @@
 
     private async Task HandleValidSubmit()
     {
-        await ProductoService.CreateAsync(command);
-        NavigationManager.NavigateTo("/productos");
+        try
+        {
+            await ProductoService.CreateAsync(command);
+            NavigationManager.NavigateTo("/productos");
+        }
+        catch (InvalidOperationException ex)
+        {
+            mensajeError = ex.Message;
+        }
+        catch (Exception)
+        {
+            mensajeError = "Ocurrió un error al guardar el producto.";
+        }
     }
+
+    private string? mensajeError;
 }

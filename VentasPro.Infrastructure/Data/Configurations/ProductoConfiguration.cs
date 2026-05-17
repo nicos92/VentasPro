@@ -15,6 +15,8 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.Precio).HasColumnType("decimal(18,2)");
         builder.Property(p => p.CodigoBarras).HasMaxLength(50);
 
+        builder.HasIndex(p => p.CodigoBarras).IsUnique().HasFilter(null);
+
         builder.HasOne(p => p.Categoria)
             .WithMany(c => c.Productos)
             .HasForeignKey(p => p.CategoriaId)
