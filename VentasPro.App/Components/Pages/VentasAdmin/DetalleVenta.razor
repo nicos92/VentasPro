@@ -12,8 +12,8 @@
 else
 {
     <div class="mb-3">
-        <a href="/ventas" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
+        <a href="/ventas/nueva" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Nueva Venta
         </a>
     </div>
 
@@ -90,8 +90,12 @@ else
                         <td class="text-end">@venta.Impuestos.ToString("N2")</td>
                     </tr>
                     <tr>
-                        <td colspan="4" class="text-end"><strong><h5>Total:</h5></strong></td>
-                        <td class="text-end"><h5 class="text-success mb-0">@venta.Total.ToString("N2")</h5></td>
+                        <td colspan="4" class="text-end"><strong>
+                            <h5>Total:</h5>
+                        </strong></td>
+                        <td class="text-end">
+                            <h5 class="text-success mb-0">@venta.Total.ToString("N2")</h5>
+                        </td>
                     </tr>
                 </tfoot>
             </table>

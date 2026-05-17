@@ -193,7 +193,7 @@ else
         }
 
         <div class="mb-3">
-            <button type="submit" class="btn btn-success" disabled="@(command.Detalles.Count == 0)">
+            <button type="button" class="btn btn-success" disabled="@(command.Detalles.Count == 0)" @onclick="MostrarConfirmacionRegistro">
                 <i class="bi bi-check-circle"></i> Registrar Venta
             </button>
             <a href="/ventas" class="btn btn-secondary">
@@ -201,6 +201,46 @@ else
             </a>
         </div>
     </EditForm>
+}
+
+@if (mostrarConfirmacion)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Venta</h5>
+                </div>
+                <div class="modal-body">
+                    <p><strong>¿Está seguro que desea registrar esta venta?</strong></p>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Productos:</span>
+                            <span class="fw-bold">@command.Detalles.Count</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span>@Subtotal.ToString("N2")</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Impuestos (@command.PorcentajeImpuesto%):</span>
+                            <span>@Impuestos.ToString("N2")</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span class="text-success">@Total.ToString("N2")</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => mostrarConfirmacion = false">No, Volver</button>
+                    <button class="btn btn-success" @onclick="ConfirmarRegistro">
+                        <i class="bi bi-check-circle"></i> Sí, Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
@@ -214,6 +254,7 @@ else
     private string? mensajeErrorProducto;
     private string? mensajeErrorBarcode;
     private string codigoBarras = string.Empty;
+    private bool mostrarConfirmacion = false;
 
     private string CodigoBarras
     {
@@ -337,6 +378,17 @@ else
                 command.Detalles[index].Cantidad = nuevaCantidad;
             }
         }
+    }
+
+    private void MostrarConfirmacionRegistro()
+    {
+        mostrarConfirmacion = true;
+    }
+
+    private async Task ConfirmarRegistro()
+    {
+        mostrarConfirmacion = false;
+        await HandleValidSubmit();
     }
 
     private async Task HandleValidSubmit()
