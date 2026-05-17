@@ -108,7 +108,7 @@ else
                     <div class="col-md-4">
                         <label class="form-label">Código de Barras</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" @oninput="ProcesarCodigoBarras"
+                            <input type="text" class="form-control" @bind="CodigoBarras" @bind:event="oninput"
                                    placeholder="Escanear código de barras" />
                             <button type="button" class="btn btn-outline-secondary" @onclick="LimpiarCodigoBarras">
                                 <i class="bi bi-x-circle"></i>
@@ -215,6 +215,16 @@ else
     private string? mensajeErrorBarcode;
     private string codigoBarras = string.Empty;
 
+    private string CodigoBarras
+    {
+        get => codigoBarras;
+        set
+        {
+            codigoBarras = value;
+            ProcesarCodigoBarras();
+        }
+    }
+
     private decimal Subtotal => command.Detalles.Sum(d =>
     {
         var prod = productos?.FirstOrDefault(p => p.Id == d.ProductoId);
@@ -263,23 +273,26 @@ else
         cantidadAgregar = 1;
     }
 
-    private void ProcesarCodigoBarras(ChangeEventArgs e)
+    private void ProcesarCodigoBarras()
     {
-        var valor = e.Value?.ToString() ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(valor))
+        if (string.IsNullOrWhiteSpace(codigoBarras))
         {
             mensajeErrorBarcode = null;
             return;
         }
 
-        var codigoNormalizado = valor.Trim().ToUpper();
+        var codigoNormalizado = codigoBarras.Trim().ToUpper();
 
         if (productosPorCodigo.TryGetValue(codigoNormalizado, out var producto))
         {
             mensajeErrorBarcode = null;
-            AgregarProductoALista(producto.Id, cantidadAgregar > 0 ? cantidadAgregar : 1);
-            codigoBarras = string.Empty;
+
+            AgregarProductoALista(
+                producto.Id,
+                cantidadAgregar > 0 ? cantidadAgregar : 1
+            );
+
+            codigoBarras = string.Empty; // limpia el input
             cantidadAgregar = 1;
         }
     }
