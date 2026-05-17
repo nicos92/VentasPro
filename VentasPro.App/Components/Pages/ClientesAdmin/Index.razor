@@ -1,0 +1,215 @@
+@page "/clientes"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Clientes.DTOs
+@inject IClienteService ClienteService
+@rendermode InteractiveServer
+
+<h3>Clientes</h3>
+
+<EditForm Model="@filtro" OnSubmit="Filtrar" FormName="filtroClientesForm">
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
+        <div class="flex-grow-1" style="min-width: 250px;">
+            <label class="form-label">Buscar</label>
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre, apellido, identificación o email..." />
+        </div>
+        
+        <div>
+            <label class="form-label">Estado</label>
+            <InputSelect @bind-Value="filtro.Estado" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="activos">Solo Activos</option>
+                <option value="inactivos">Solo Inactivos</option>
+            </InputSelect>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+        
+        <a href="/clientes/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
+</EditForm>
+
+@if (clientesOriginal == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!clientes.Any())
+{
+    <div class="alert alert-info">No se encontraron clientes.</div>
+}
+else
+{
+    <table class="table table-striped col-12 mt-3">
+        <thead>
+            <tr>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ClienteDto.Identificacion))">
+                    Identificación <i class="@GetSortIcon(nameof(ClienteDto.Identificacion))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ClienteDto.Nombre))">
+                    Nombre <i class="@GetSortIcon(nameof(ClienteDto.Nombre))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ClienteDto.Apellido))">
+                    Apellido <i class="@GetSortIcon(nameof(ClienteDto.Apellido))"></i>
+                </th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cliente in clientes)
+            {
+                <tr class="@(cliente.Activo ? "" : "table-secondary")">
+                    <td>@cliente.Identificacion</td>
+                    <td>@cliente.Nombre</td>
+                    <td>@cliente.Apellido</td>
+                    <td>@cliente.Email</td>
+                    <td>@cliente.Telefono</td>
+                    <td>
+                        <span class="badge @(cliente.Activo ? "bg-success" : "bg-secondary")">
+                            @(cliente.Activo ? "Activo" : "Inactivo")
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/clientes/editar/@cliente.Id" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        @if (cliente.Activo)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(cliente.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => Activar(cliente.Id)">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="text-muted">
+        Mostrando @clientes.Count() de @clientesOriginal.Count() clientes
+    </div>
+}
+
+<style>
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    th.sortable:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    private IEnumerable<ClienteDto>? clientesOriginal;
+    private IEnumerable<ClienteDto>? clientes;
+    private FiltroCliente filtro = new();
+    
+    private string columnaOrden = "Nombre";
+    private bool ascendente = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarClientes();
+    }
+
+    private async Task CargarClientes()
+    {
+        bool? soloActivos = filtro.Estado switch
+        {
+            "activos" => true,
+            "inactivos" => false,
+            _ => null
+        };
+
+        clientesOriginal = await ClienteService.GetAllAsync(soloActivos);
+        AplicarFiltroYOrden();
+    }
+
+    private void AplicarFiltroYOrden()
+    {
+        IEnumerable<ClienteDto>? resultado = clientesOriginal;
+
+        if (!string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
+        {
+            var termino = filtro.TextoBusqueda.ToLower().Trim();
+            resultado = resultado?.Where(c =>
+                (c.Nombre != null && c.Nombre.ToLower().Contains(termino)) ||
+                (c.Apellido != null && c.Apellido.ToLower().Contains(termino)) ||
+                (c.Identificacion != null && c.Identificacion.ToLower().Contains(termino)) ||
+                (c.Email != null && c.Email.ToLower().Contains(termino))
+            );
+        }
+
+        resultado = columnaOrden switch
+        {
+            nameof(ClienteDto.Identificacion) => ascendente 
+                ? resultado?.OrderBy(c => c.Identificacion) 
+                : resultado?.OrderByDescending(c => c.Identificacion),
+            nameof(ClienteDto.Apellido) => ascendente 
+                ? resultado?.OrderBy(c => c.Apellido) 
+                : resultado?.OrderByDescending(c => c.Apellido),
+            _ => ascendente 
+                ? resultado?.OrderBy(c => c.Nombre) 
+                : resultado?.OrderByDescending(c => c.Nombre)
+        };
+
+        clientes = resultado;
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
+        {
+            ascendente = !ascendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ascendente = true;
+        }
+        AplicarFiltroYOrden();
+    }
+
+    private string GetSortIcon(string columna)
+    {
+        if (columnaOrden != columna)
+            return "bi bi-chevron-expand text-muted";
+
+        return ascendente ? "bi bi-chevron-up" : "bi bi-chevron-down";
+    }
+
+    private async Task Filtrar()
+    {
+        await CargarClientes();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await ClienteService.DeleteAsync(id);
+        await CargarClientes();
+    }
+
+    private async Task Activar(int id)
+    {
+        await ClienteService.ActivateAsync(id);
+        await CargarClientes();
+    }
+
+    private class FiltroCliente
+    {
+        public string TextoBusqueda { get; set; } = string.Empty;
+        public string Estado { get; set; } = "todos";
+    }
+}

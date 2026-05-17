@@ -19,6 +19,7 @@ builder.Services.AddScoped<IVentaRepository, VentaRepository>();
 
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

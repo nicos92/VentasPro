@@ -1,0 +1,104 @@
+@page "/clientes/editar/{Id:int}"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Clientes.Commands
+@using VentasPro.Application.Features.Clientes.DTOs
+@inject IClienteService ClienteService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Editar Cliente</h3>
+
+@if (command == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <EditForm Model="@command" OnValidSubmit="HandleValidSubmit" FormName="editarClienteForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nombre</label>
+                <InputText @bind-Value="command.Nombre" class="form-control" />
+                <ValidationMessage For="@(() => command.Nombre)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Apellido</label>
+                <InputText @bind-Value="command.Apellido" class="form-control" />
+                <ValidationMessage For="@(() => command.Apellido)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <InputText @bind-Value="command.Email" class="form-control" />
+                <ValidationMessage For="@(() => command.Email)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Teléfono</label>
+                <InputText @bind-Value="command.Telefono" class="form-control" />
+                <ValidationMessage For="@(() => command.Telefono)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Identificación</label>
+                <InputText @bind-Value="command.Identificacion" class="form-control" />
+                <ValidationMessage For="@(() => command.Identificacion)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Dirección</label>
+                <InputText @bind-Value="command.Direccion" class="form-control" />
+                <ValidationMessage For="@(() => command.Direccion)" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar
+            </button>
+            <a href="/clientes" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UpdateClienteCommand? command;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var cliente = await ClienteService.GetByIdAsync(Id);
+
+        if (cliente != null)
+        {
+            command = new UpdateClienteCommand
+            {
+                Id = cliente.Id,
+                Nombre = cliente.Nombre,
+                Apellido = cliente.Apellido,
+                Email = cliente.Email,
+                Telefono = cliente.Telefono,
+                Direccion = cliente.Direccion,
+                Identificacion = cliente.Identificacion
+            };
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (command != null)
+        {
+            await ClienteService.UpdateAsync(command);
+            NavigationManager.NavigateTo("/clientes");
+        }
+    }
+}
