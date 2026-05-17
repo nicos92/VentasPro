@@ -53,7 +53,8 @@ public class ProductoService : IProductoService
             PorcentajeGanancia = command.PorcentajeGanancia,
             Stock = command.Stock,
             CodigoBarras = command.CodigoBarras,
-            CategoriaId = command.CategoriaId
+            CategoriaId = command.CategoriaId,
+            ProveedorId = command.ProveedorId
         };
 
         await _productoRepository.AddAsync(producto);
@@ -81,6 +82,7 @@ public class ProductoService : IProductoService
         producto.Stock = command.Stock;
         producto.CodigoBarras = command.CodigoBarras;
         producto.CategoriaId = command.CategoriaId;
+        producto.ProveedorId = command.ProveedorId;
 
         await _productoRepository.UpdateAsync(producto);
         return MapToDto(producto);
@@ -127,6 +129,8 @@ public class ProductoService : IProductoService
             CodigoBarras = producto.CodigoBarras,
             CategoriaId = producto.CategoriaId,
             CategoriaNombre = producto.Categoria?.Nombre,
+            ProveedorId = producto.ProveedorId,
+            ProveedorNombre = producto.Proveedor?.NombreEmpresa,
             Activo = producto.Activo
         };
     }

@@ -43,7 +43,7 @@ public class ProductoRepository : Repository<Producto>, IProductoRepository
 
     public override async Task<IEnumerable<Producto>> GetAllAsync(bool includeInactive = false)
     {
-        var query = _dbSet.Include(p => p.Categoria).AsQueryable();
+        var query = _dbSet.Include(p => p.Categoria).Include(p => p.Proveedor).AsQueryable();
         if (!includeInactive)
         {
             query = query.Where(p => p.Activo);

@@ -29,4 +29,6 @@ public class UpdateProductoCommand
     public string? CodigoBarras { get; set; }
 
     public int? CategoriaId { get; set; }
+
+    public int? ProveedorId { get; set; }
 }

@@ -3,8 +3,10 @@
 @using VentasPro.Application.Features.Productos.Commands
 @using VentasPro.Application.Features.Productos.DTOs
 @using VentasPro.Application.Features.Categorias.DTOs
+@using VentasPro.Application.Features.Proveedores.DTOs
 @inject IProductoService ProductoService
 @inject ICategoriaService CategoriaService
+@inject IProveedorService ProveedorService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
@@ -63,6 +65,19 @@
                 }
             </InputSelect>
         </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Proveedor (Opcional)</label>
+            <InputSelect @bind-Value="command.ProveedorId" class="form-control">
+                <option value="">-- Sin Proveedor --</option>
+                @if (proveedores != null)
+                {
+                    @foreach (var prov in proveedores)
+                    {
+                        <option value="@prov.Id">@prov.NombreEmpresa</option>
+                    }
+                }
+            </InputSelect>
+        </div>
     </div>
 
     <div class="card bg-light mb-3">
@@ -97,12 +112,14 @@
 
     private CreateProductoCommand command = new() { PorcentajeGanancia = 30 };
     private IEnumerable<CategoriaDto>? categorias;
+    private IEnumerable<ProveedorDto>? proveedores;
 
     private decimal PrecioVentaCalculado => command.PrecioCosto + (command.PrecioCosto * command.PorcentajeGanancia / 100);
 
     protected override async Task OnInitializedAsync()
     {
         categorias = await CategoriaService.GetAllAsync(true);
+        proveedores = await ProveedorService.GetAllAsync(true);
     }
 
     private async Task HandleValidSubmit()

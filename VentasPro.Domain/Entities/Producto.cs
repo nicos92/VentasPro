@@ -10,6 +10,8 @@ public class Producto : BaseEntity
     public string? CodigoBarras { get; set; }
     public int? CategoriaId { get; set; }
     public Categoria? Categoria { get; set; }
+    public int? ProveedorId { get; set; }
+    public Proveedor? Proveedor { get; set; }
     public ICollection<DetalleVenta> DetallesVenta { get; set; } = new List<DetalleVenta>();
 
     public decimal PrecioVenta => PrecioCosto + (PrecioCosto * PorcentajeGanancia / 100);

@@ -24,5 +24,10 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .WithMany(c => c.Productos)
             .HasForeignKey(p => p.CategoriaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(p => p.Proveedor)
+            .WithMany(pr => pr.Productos)
+            .HasForeignKey(p => p.ProveedorId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

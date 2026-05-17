@@ -8,4 +8,5 @@ public class Proveedor : BaseEntity
     public string? Tel { get; set; }
     public string? Email { get; set; }
     public string? Observacion { get; set; }
+    public ICollection<Producto> Productos { get; set; } = new List<Producto>();
 }

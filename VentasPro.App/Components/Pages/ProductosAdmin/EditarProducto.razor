@@ -3,8 +3,10 @@
 @using VentasPro.Application.Features.Productos.Commands
 @using VentasPro.Application.Features.Productos.DTOs
 @using VentasPro.Application.Features.Categorias.DTOs
+@using VentasPro.Application.Features.Proveedores.DTOs
 @inject IProductoService ProductoService
 @inject ICategoriaService CategoriaService
+@inject IProveedorService ProveedorService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
@@ -56,19 +58,32 @@ else
                 <InputText @bind-Value="command.CodigoBarras" class="form-control" />
                 <ValidationMessage For="@(() => command.CodigoBarras)" />
             </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Categoría</label>
-                <InputSelect @bind-Value="command.CategoriaId" class="form-control">
-                    <option value="">-- Seleccionar Categoría --</option>
-                    @if (categorias != null)
+<div class="col-md-6 mb-3">
+            <label class="form-label">Categoría</label>
+            <InputSelect @bind-Value="command.CategoriaId" class="form-control">
+                <option value="">-- Seleccionar Categoría --</option>
+                @if (categorias != null)
+                {
+                    @foreach (var cat in categorias)
                     {
-                        @foreach (var cat in categorias)
-                        {
-                            <option value="@cat.Id">@cat.Nombre</option>
-                        }
+                        <option value="@cat.Id">@cat.Nombre</option>
                     }
-                </InputSelect>
-            </div>
+                }
+            </InputSelect>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Proveedor (Opcional)</label>
+            <InputSelect @bind-Value="command.ProveedorId" class="form-control">
+                <option value="">-- Sin Proveedor --</option>
+                @if (proveedores != null)
+                {
+                    @foreach (var prov in proveedores)
+                    {
+                        <option value="@prov.Id">@prov.NombreEmpresa</option>
+                    }
+                }
+            </InputSelect>
+        </div>
         </div>
 
         <div class="card bg-light mb-3">
@@ -106,6 +121,7 @@ else
 
     private UpdateProductoCommand? command;
     private IEnumerable<CategoriaDto>? categorias;
+    private IEnumerable<ProveedorDto>? proveedores;
 
     private decimal PrecioVentaCalculado => (command?.PrecioCosto ?? 0) + ((command?.PrecioCosto ?? 0) * (command?.PorcentajeGanancia ?? 0) / 100);
 
@@ -113,6 +129,7 @@ else
     {
         var producto = await ProductoService.GetByIdAsync(Id);
         categorias = await CategoriaService.GetAllAsync(true);
+        proveedores = await ProveedorService.GetAllAsync(true);
 
         if (producto != null)
         {
@@ -125,7 +142,8 @@ else
                 PorcentajeGanancia = producto.PorcentajeGanancia,
                 Stock = producto.Stock,
                 CodigoBarras = producto.CodigoBarras,
-                CategoriaId = producto.CategoriaId
+                CategoriaId = producto.CategoriaId,
+                ProveedorId = producto.ProveedorId
             };
         }
     }
