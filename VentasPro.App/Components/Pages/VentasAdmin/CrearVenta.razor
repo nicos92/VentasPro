@@ -8,6 +8,7 @@
 @inject IProductoService ProductoService
 @inject IClienteService ClienteService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <h3>Nueva Venta</h3>
@@ -108,7 +109,7 @@ else
                     <div class="col-md-4">
                         <label class="form-label">Código de Barras</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" @bind="CodigoBarras" @bind:event="oninput"
+                            <input type="text" id="inputCodigoBarras" class="form-control" @bind="CodigoBarras" @bind:event="oninput"
                                    placeholder="Escanear código de barras" />
                             <button type="button" class="btn btn-outline-secondary" @onclick="LimpiarCodigoBarras">
                                 <i class="bi bi-x-circle"></i>
@@ -283,6 +284,15 @@ else
         productosPorCodigo = productos!
                     .Where(p => !string.IsNullOrWhiteSpace(p.CodigoBarras))
                     .ToDictionary(p => p.CodigoBarras!.Trim().ToUpper(), p => p);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(100);
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('inputCodigoBarras')?.focus();");
+        }
     }
 
     private void AgregarProducto()
