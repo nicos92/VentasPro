@@ -1,0 +1,124 @@
+@page "/proveedores/editar/{Id:int}"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Proveedores.Commands
+@using VentasPro.Application.Features.Proveedores.DTOs
+@inject IProveedorService ProveedorService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Editar Proveedor</h3>
+
+@if (command == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <EditForm Model="@command" OnValidSubmit="HandleValidSubmit" FormName="editarProveedorForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">CUIT</label>
+                <InputText @bind-Value="command.CUIT" class="form-control" placeholder="12345678901" maxlength="11" />
+                <ValidationMessage For="@(() => command.CUIT)" />
+                <small class="text-muted">11 caracteres numéricos</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nombre</label>
+                <InputText @bind-Value="command.Nombre" class="form-control" />
+                <ValidationMessage For="@(() => command.Nombre)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+<label class="form-label">Nombre de Empresa</label>
+            <InputText @bind-Value="command.NombreEmpresa" class="form-control" />
+            <ValidationMessage For="@(() => command.NombreEmpresa)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Teléfono</label>
+                <InputText @bind-Value="command.Tel" class="form-control" />
+                <ValidationMessage For="@(() => command.Tel)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <InputText @bind-Value="command.Email" class="form-control" type="email" />
+                <ValidationMessage For="@(() => command.Email)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Observación</label>
+                <InputText @bind-Value="command.Observacion" class="form-control" />
+                <ValidationMessage For="@(() => command.Observacion)" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> @mensajeError
+            </div>
+        }
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar
+            </button>
+            <a href="/proveedores" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UpdateProveedorCommand? command;
+    private string? mensajeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var proveedor = await ProveedorService.GetByIdAsync(Id);
+
+        if (proveedor != null)
+        {
+            command = new UpdateProveedorCommand
+            {
+                Id = proveedor.Id,
+                CUIT = proveedor.CUIT,
+                NombreEmpresa = proveedor.NombreEmpresa,
+                Nombre = proveedor.Nombre,
+                Tel = proveedor.Tel,
+                Email = proveedor.Email,
+                Observacion = proveedor.Observacion
+            };
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (command != null)
+        {
+            try
+            {
+                await ProveedorService.UpdateAsync(command);
+                NavigationManager.NavigateTo("/proveedores");
+            }
+            catch (InvalidOperationException ex)
+            {
+                mensajeError = ex.Message;
+            }
+            catch (Exception)
+            {
+                mensajeError = "Ocurrió un error al guardar el proveedor.";
+            }
+        }
+    }
+}

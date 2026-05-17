@@ -1,0 +1,215 @@
+@page "/proveedores"
+@using VentasPro.Application.Interfaces
+@using VentasPro.Application.Features.Proveedores.DTOs
+@inject IProveedorService ProveedorService
+@rendermode InteractiveServer
+
+<h3>Proveedores</h3>
+
+<EditForm Model="@filtro" OnSubmit="Filtrar" FormName="filtroProveedoresForm">
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
+        <div class="flex-grow-1" style="min-width: 250px;">
+            <label class="form-label">Buscar</label>
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="CUIT, proveedor, nombre o email..." />
+        </div>
+        
+        <div>
+            <label class="form-label">Estado</label>
+            <InputSelect @bind-Value="filtro.Estado" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="activos">Solo Activos</option>
+                <option value="inactivos">Solo Inactivos</option>
+            </InputSelect>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+        
+        <a href="/proveedores/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
+</EditForm>
+
+@if (proveedoresOriginal == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!proveedores.Any())
+{
+    <div class="alert alert-info">No se encontraron proveedores.</div>
+}
+else
+{
+    <table class="table table-striped col-12 mt-3">
+        <thead>
+            <tr>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProveedorDto.CUIT))">
+                    CUIT <i class="@GetSortIcon(nameof(ProveedorDto.CUIT))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProveedorDto.NombreEmpresa))">
+                    Empresa <i class="@GetSortIcon(nameof(ProveedorDto.NombreEmpresa))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProveedorDto.Nombre))">
+                    Nombre <i class="@GetSortIcon(nameof(ProveedorDto.Nombre))"></i>
+                </th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var proveedor in proveedores)
+            {
+                <tr class="@(proveedor.Activo ? "" : "table-secondary")">
+                    <td>@proveedor.CUIT</td>
+                    <td>@proveedor.NombreEmpresa</td>
+                    <td>@proveedor.Nombre</td>
+                    <td>@proveedor.Tel</td>
+                    <td>@proveedor.Email</td>
+                    <td>
+                        <span class="badge @(proveedor.Activo ? "bg-success" : "bg-secondary")">
+                            @(proveedor.Activo ? "Activo" : "Inactivo")
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/proveedores/editar/@proveedor.Id" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        @if (proveedor.Activo)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(proveedor.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => Activar(proveedor.Id)">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="text-muted">
+        Mostrando @proveedores.Count() de @proveedoresOriginal.Count() proveedores
+    </div>
+}
+
+<style>
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    th.sortable:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    private IEnumerable<ProveedorDto>? proveedoresOriginal;
+    private IEnumerable<ProveedorDto>? proveedores;
+    private FiltroProveedor filtro = new();
+    
+    private string columnaOrden = "Proveedor";
+    private bool ascendente = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProveedores();
+    }
+
+    private async Task CargarProveedores()
+    {
+        bool? soloActivos = filtro.Estado switch
+        {
+            "activos" => true,
+            "inactivos" => false,
+            _ => null
+        };
+
+        proveedoresOriginal = await ProveedorService.GetAllAsync(soloActivos);
+        AplicarFiltroYOrden();
+    }
+
+    private void AplicarFiltroYOrden()
+    {
+        IEnumerable<ProveedorDto>? resultado = proveedoresOriginal;
+
+        if (!string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
+        {
+            var termino = filtro.TextoBusqueda.ToLower().Trim();
+            resultado = resultado?.Where(p =>
+                (p.CUIT != null && p.CUIT.ToLower().Contains(termino)) ||
+                (p.NombreEmpresa != null && p.NombreEmpresa.ToLower().Contains(termino)) ||
+                (p.Nombre != null && p.Nombre.ToLower().Contains(termino)) ||
+                (p.Email != null && p.Email.ToLower().Contains(termino))
+            );
+        }
+
+        resultado = columnaOrden switch
+        {
+            nameof(ProveedorDto.CUIT) => ascendente 
+                ? resultado?.OrderBy(p => p.CUIT) 
+                : resultado?.OrderByDescending(p => p.CUIT),
+            nameof(ProveedorDto.Nombre) => ascendente 
+                ? resultado?.OrderBy(p => p.Nombre) 
+                : resultado?.OrderByDescending(p => p.Nombre),
+            _ => ascendente 
+                ? resultado?.OrderBy(p => p.NombreEmpresa) 
+                : resultado?.OrderByDescending(p => p.NombreEmpresa)
+        };
+
+        proveedores = resultado;
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
+        {
+            ascendente = !ascendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ascendente = true;
+        }
+        AplicarFiltroYOrden();
+    }
+
+    private string GetSortIcon(string columna)
+    {
+        if (columnaOrden != columna)
+            return "bi bi-chevron-expand text-muted";
+
+        return ascendente ? "bi bi-chevron-up" : "bi bi-chevron-down";
+    }
+
+    private async Task Filtrar()
+    {
+        await CargarProveedores();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await ProveedorService.DeleteAsync(id);
+        await CargarProveedores();
+    }
+
+    private async Task Activar(int id)
+    {
+        await ProveedorService.ActivateAsync(id);
+        await CargarProveedores();
+    }
+
+    private class FiltroProveedor
+    {
+        public string TextoBusqueda { get; set; } = string.Empty;
+        public string Estado { get; set; } = "todos";
+    }
+}
