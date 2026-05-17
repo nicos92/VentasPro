@@ -45,10 +45,18 @@ else
     <table class="table table-striped col-12 mt-3">
         <thead>
             <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Stock</th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.CodigoBarras))">
+                    Código <i class="@GetSortIcon(nameof(ProductoDto.CodigoBarras))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Nombre))">
+                    Nombre <i class="@GetSortIcon(nameof(ProductoDto.Nombre))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Precio))">
+                    Precio <i class="@GetSortIcon(nameof(ProductoDto.Precio))"></i>
+                </th>
+                <th class="sortable" @onclick="() => OrdenarPor(nameof(ProductoDto.Stock))">
+                    Stock <i class="@GetSortIcon(nameof(ProductoDto.Stock))"></i>
+                </th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -60,7 +68,7 @@ else
                     <td>@producto.CodigoBarras</td>
                     <td>@producto.Nombre</td>
                     <td>@producto.Precio.ToString("C")</td>
-                    <td>@producto.Stock</td>
+                    <td class="@GetStockColor(producto.Stock)">@producto.Stock</td>
                     <td>
                         <span class="badge @(producto.Activo ? "bg-success" : "bg-secondary")">
                             @(producto.Activo ? "Activo" : "Inactivo")
@@ -93,10 +101,23 @@ else
     </div>
 }
 
+<style>
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    th.sortable:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
 @code {
     private IEnumerable<ProductoDto>? productosOriginal;
     private IEnumerable<ProductoDto>? productos;
     private FiltroProducto filtro = new();
+    
+    private string columnaOrden = "Nombre";
+    private bool ascendente = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,23 +134,70 @@ else
         };
 
         productosOriginal = await ProductoService.GetAllAsync(soloActivos);
-        AplicarFiltro();
+        AplicarFiltroYOrden();
     }
 
-    private void AplicarFiltro()
+    private void AplicarFiltroYOrden()
     {
-        if (string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
-        {
-            productos = productosOriginal;
-        }
-        else
+        IEnumerable<ProductoDto>? resultado = productosOriginal;
+
+        if (!string.IsNullOrWhiteSpace(filtro.TextoBusqueda))
         {
             var termino = filtro.TextoBusqueda.ToLower().Trim();
-            productos = productosOriginal?.Where(p =>
+            resultado = resultado?.Where(p =>
                 (p.Nombre != null && p.Nombre.ToLower().Contains(termino)) ||
                 (p.CodigoBarras != null && p.CodigoBarras.ToLower().Contains(termino))
             );
         }
+
+        resultado = columnaOrden switch
+        {
+            nameof(ProductoDto.CodigoBarras) => ascendente 
+                ? resultado?.OrderBy(p => p.CodigoBarras) 
+                : resultado?.OrderByDescending(p => p.CodigoBarras),
+            nameof(ProductoDto.Precio) => ascendente 
+                ? resultado?.OrderBy(p => p.Precio) 
+                : resultado?.OrderByDescending(p => p.Precio),
+            nameof(ProductoDto.Stock) => ascendente 
+                ? resultado?.OrderBy(p => p.Stock) 
+                : resultado?.OrderByDescending(p => p.Stock),
+            _ => ascendente 
+                ? resultado?.OrderBy(p => p.Nombre) 
+                : resultado?.OrderByDescending(p => p.Nombre)
+        };
+
+        productos = resultado;
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
+        {
+            ascendente = !ascendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ascendente = true;
+        }
+        AplicarFiltroYOrden();
+    }
+
+    private string GetSortIcon(string columna)
+    {
+        if (columnaOrden != columna)
+            return "bi bi-chevron-expand text-muted";
+
+        return ascendente ? "bi bi-chevron-up" : "bi bi-chevron-down";
+    }
+
+    private string GetStockColor(int stock)
+    {
+        if (stock <= 10)
+            return "text-danger fw-bold";
+        if (stock <= 20)
+            return "text-warning fw-bold";
+        return "";
     }
 
     private async Task Filtrar()
