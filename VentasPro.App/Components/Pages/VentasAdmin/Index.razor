@@ -58,7 +58,7 @@
 {
     <p><em>Cargando...</em></p>
 }
-else if (!ventas.Any())
+else if (ventas == null || !ventas.Any())
 {
     <div class="alert alert-info">No se encontraron ventas.</div>
 }

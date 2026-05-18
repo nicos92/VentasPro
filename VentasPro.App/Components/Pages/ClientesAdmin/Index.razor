@@ -10,9 +10,10 @@
     <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
         <div class="flex-grow-1" style="min-width: 250px;">
             <label class="form-label">Buscar</label>
-            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre, apellido, identificación o email..." />
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control"
+                       placeholder="Nombre, apellido, identificación o email..." />
         </div>
-        
+
         <div>
             <label class="form-label">Estado</label>
             <InputSelect @bind-Value="filtro.Estado" class="form-select">
@@ -21,11 +22,11 @@
                 <option value="inactivos">Solo Inactivos</option>
             </InputSelect>
         </div>
-        
+
         <button type="submit" class="btn btn-secondary">
             <i class="bi bi-search"></i> Buscar
         </button>
-        
+
         <a href="/clientes/nuevo" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo
         </a>
@@ -36,7 +37,7 @@
 {
     <p><em>Cargando...</em></p>
 }
-else if (!clientes.Any())
+else if (clientes == null || !clientes.Any())
 {
     <div class="alert alert-info">No se encontraron clientes.</div>
 }
@@ -95,7 +96,7 @@ else
             }
         </tbody>
     </table>
-    
+
     <div class="text-muted">
         Mostrando @clientes.Count() de @clientesOriginal.Count() clientes
     </div>
@@ -106,8 +107,9 @@ else
         cursor: pointer;
         user-select: none;
     }
+
     th.sortable:hover {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
     }
 </style>
 
@@ -115,7 +117,7 @@ else
     private IEnumerable<ClienteDto>? clientesOriginal;
     private IEnumerable<ClienteDto>? clientes;
     private FiltroCliente filtro = new();
-    
+
     private string columnaOrden = "Nombre";
     private bool ascendente = true;
 
@@ -154,14 +156,14 @@ else
 
         resultado = columnaOrden switch
         {
-            nameof(ClienteDto.Identificacion) => ascendente 
-                ? resultado?.OrderBy(c => c.Identificacion) 
+            nameof(ClienteDto.Identificacion) => ascendente
+                ? resultado?.OrderBy(c => c.Identificacion)
                 : resultado?.OrderByDescending(c => c.Identificacion),
-            nameof(ClienteDto.Apellido) => ascendente 
-                ? resultado?.OrderBy(c => c.Apellido) 
+            nameof(ClienteDto.Apellido) => ascendente
+                ? resultado?.OrderBy(c => c.Apellido)
                 : resultado?.OrderByDescending(c => c.Apellido),
-            _ => ascendente 
-                ? resultado?.OrderBy(c => c.Nombre) 
+            _ => ascendente
+                ? resultado?.OrderBy(c => c.Nombre)
                 : resultado?.OrderByDescending(c => c.Nombre)
         };
 

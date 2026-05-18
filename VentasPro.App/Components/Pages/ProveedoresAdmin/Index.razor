@@ -10,9 +10,10 @@
     <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
         <div class="flex-grow-1" style="min-width: 250px;">
             <label class="form-label">Buscar</label>
-            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="CUIT, proveedor, nombre o email..." />
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control"
+                       placeholder="CUIT, proveedor, nombre o email..." />
         </div>
-        
+
         <div>
             <label class="form-label">Estado</label>
             <InputSelect @bind-Value="filtro.Estado" class="form-select">
@@ -21,11 +22,11 @@
                 <option value="inactivos">Solo Inactivos</option>
             </InputSelect>
         </div>
-        
+
         <button type="submit" class="btn btn-secondary">
             <i class="bi bi-search"></i> Buscar
         </button>
-        
+
         <a href="/proveedores/nuevo" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo
         </a>
@@ -36,7 +37,7 @@
 {
     <p><em>Cargando...</em></p>
 }
-else if (!proveedores.Any())
+else if (proveedores == null || !proveedores.Any())
 {
     <div class="alert alert-info">No se encontraron proveedores.</div>
 }
@@ -95,7 +96,7 @@ else
             }
         </tbody>
     </table>
-    
+
     <div class="text-muted">
         Mostrando @proveedores.Count() de @proveedoresOriginal.Count() proveedores
     </div>
@@ -106,8 +107,9 @@ else
         cursor: pointer;
         user-select: none;
     }
+
     th.sortable:hover {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
     }
 </style>
 
@@ -115,7 +117,7 @@ else
     private IEnumerable<ProveedorDto>? proveedoresOriginal;
     private IEnumerable<ProveedorDto>? proveedores;
     private FiltroProveedor filtro = new();
-    
+
     private string columnaOrden = "Proveedor";
     private bool ascendente = true;
 
@@ -154,14 +156,14 @@ else
 
         resultado = columnaOrden switch
         {
-            nameof(ProveedorDto.CUIT) => ascendente 
-                ? resultado?.OrderBy(p => p.CUIT) 
+            nameof(ProveedorDto.CUIT) => ascendente
+                ? resultado?.OrderBy(p => p.CUIT)
                 : resultado?.OrderByDescending(p => p.CUIT),
-            nameof(ProveedorDto.Nombre) => ascendente 
-                ? resultado?.OrderBy(p => p.Nombre) 
+            nameof(ProveedorDto.Nombre) => ascendente
+                ? resultado?.OrderBy(p => p.Nombre)
                 : resultado?.OrderByDescending(p => p.Nombre),
-            _ => ascendente 
-                ? resultado?.OrderBy(p => p.NombreEmpresa) 
+            _ => ascendente
+                ? resultado?.OrderBy(p => p.NombreEmpresa)
                 : resultado?.OrderByDescending(p => p.NombreEmpresa)
         };
 

@@ -12,7 +12,7 @@
             <label class="form-label">Buscar</label>
             <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre o descripción..." />
         </div>
-        
+
         <div>
             <label class="form-label">Estado</label>
             <InputSelect @bind-Value="filtro.Estado" class="form-select">
@@ -21,11 +21,11 @@
                 <option value="inactivos">Solo Inactivos</option>
             </InputSelect>
         </div>
-        
+
         <button type="submit" class="btn btn-secondary">
             <i class="bi bi-search"></i> Buscar
         </button>
-        
+
         <a href="/categorias/nuevo" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo
         </a>
@@ -36,7 +36,7 @@
 {
     <p><em>Cargando...</em></p>
 }
-else if (!categorias.Any())
+else if (categorias == null || !categorias.Any())
 {
     <div class="alert alert-info">No se encontraron categorías.</div>
 }
@@ -87,7 +87,7 @@ else
             }
         </tbody>
     </table>
-    
+
     <div class="text-muted">
         Mostrando @categorias.Count() de @categoriasOriginal.Count() categorías
     </div>
@@ -98,8 +98,9 @@ else
         cursor: pointer;
         user-select: none;
     }
+
     th.sortable:hover {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
     }
 </style>
 
@@ -107,7 +108,7 @@ else
     private IEnumerable<CategoriaDto>? categoriasOriginal;
     private IEnumerable<CategoriaDto>? categorias;
     private FiltroCategoria filtro = new();
-    
+
     private string columnaOrden = "Nombre";
     private bool ascendente = true;
 
@@ -144,11 +145,11 @@ else
 
         resultado = columnaOrden switch
         {
-            nameof(CategoriaDto.Descripcion) => ascendente 
-                ? resultado?.OrderBy(c => c.Descripcion) 
+            nameof(CategoriaDto.Descripcion) => ascendente
+                ? resultado?.OrderBy(c => c.Descripcion)
                 : resultado?.OrderByDescending(c => c.Descripcion),
-            _ => ascendente 
-                ? resultado?.OrderBy(c => c.Nombre) 
+            _ => ascendente
+                ? resultado?.OrderBy(c => c.Nombre)
                 : resultado?.OrderByDescending(c => c.Nombre)
         };
 

@@ -10,9 +10,10 @@
     <div class="mb-3 d-flex gap-2 flex-wrap align-items-end">
         <div class="flex-grow-1" style="min-width: 250px;">
             <label class="form-label">Buscar</label>
-            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control" placeholder="Nombre o código de barras..." />
+            <InputText @bind-Value="filtro.TextoBusqueda" class="form-control"
+                       placeholder="Nombre o código de barras..." />
         </div>
-        
+
         <div>
             <label class="form-label">Estado</label>
             <InputSelect @bind-Value="filtro.Estado" class="form-select">
@@ -21,11 +22,11 @@
                 <option value="inactivos">Solo Inactivos</option>
             </InputSelect>
         </div>
-        
+
         <button type="submit" class="btn btn-secondary">
             <i class="bi bi-search"></i> Buscar
         </button>
-        
+
         <a href="/productos/nuevo" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo
         </a>
@@ -36,7 +37,7 @@
 {
     <p><em>Cargando...</em></p>
 }
-else if (!productos.Any())
+else if (productos == null || !productos.Any())
 {
     <div class="alert alert-info">No se encontraron productos.</div>
 }
@@ -99,7 +100,7 @@ else
             }
         </tbody>
     </table>
-    
+
     <div class="text-muted">
         Mostrando @productos.Count() de @productosOriginal.Count() productos
     </div>
@@ -110,8 +111,9 @@ else
         cursor: pointer;
         user-select: none;
     }
+
     th.sortable:hover {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
     }
 </style>
 
@@ -119,7 +121,7 @@ else
     private IEnumerable<ProductoDto>? productosOriginal;
     private IEnumerable<ProductoDto>? productos;
     private FiltroProducto filtro = new();
-    
+
     private string columnaOrden = "Nombre";
     private bool ascendente = true;
 
