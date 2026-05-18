@@ -76,7 +76,7 @@ public class ClienteService : IClienteService
             ?? throw new InvalidOperationException($"Cliente con ID {id} no encontrado.");
 
         cliente.Activo = true;
-        cliente.FechaModificacion = DateTime.UtcNow;
+        cliente.FechaModificacion = DateTime.Now;
         await _clienteRepository.UpdateAsync(cliente);
     }
 

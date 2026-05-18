@@ -83,7 +83,7 @@ public class VentaService : IVentaService
             var venta = new Venta
             {
                 ClienteId = command.ClienteId,
-                FechaVenta = DateTime.UtcNow,
+                FechaVenta = DateTime.Now,
                 MetodoPago = (MetodoPago)command.MetodoPago,
                 Notas = command.Notas,
                 Estado = EstadoVenta.Completada
@@ -151,7 +151,7 @@ public class VentaService : IVentaService
             }
 
             venta.Estado = EstadoVenta.Cancelada;
-            venta.FechaModificacion = DateTime.UtcNow;
+            venta.FechaModificacion = DateTime.Now;
             await _ventaRepository.UpdateAsyncWithoutSave(venta);
 
             await _context.SaveChangesAsync();

@@ -88,7 +88,7 @@ public class ProveedorService : IProveedorService
             ?? throw new InvalidOperationException($"Proveedor con ID {id} no encontrado.");
 
         proveedor.Activo = true;
-        proveedor.FechaModificacion = DateTime.UtcNow;
+        proveedor.FechaModificacion = DateTime.Now;
         await _proveedorRepository.UpdateAsync(proveedor);
     }
 

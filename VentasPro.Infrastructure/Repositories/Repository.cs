@@ -39,7 +39,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public virtual async Task<T> AddAsync(T entity)
     {
-        entity.FechaCreacion = DateTime.UtcNow;
+        entity.FechaCreacion = DateTime.Now;
         entity.Activo = true;
         await _dbSet.AddAsync(entity);
         await _context.SaveChangesAsync();
@@ -48,21 +48,21 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public virtual async Task AddAsyncWithoutSave(T entity)
     {
-        entity.FechaCreacion = DateTime.UtcNow;
+        entity.FechaCreacion = DateTime.Now;
         entity.Activo = true;
         await _dbSet.AddAsync(entity);
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
-        entity.FechaModificacion = DateTime.UtcNow;
+        entity.FechaModificacion = DateTime.Now;
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
     }
 
     public virtual async Task UpdateAsyncWithoutSave(T entity)
     {
-        entity.FechaModificacion = DateTime.UtcNow;
+        entity.FechaModificacion = DateTime.Now;
         _dbSet.Update(entity);
     }
 
@@ -72,7 +72,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         if (entity != null)
         {
             entity.Activo = false;
-            entity.FechaModificacion = DateTime.UtcNow;
+            entity.FechaModificacion = DateTime.Now;
             await _context.SaveChangesAsync();
         }
     }

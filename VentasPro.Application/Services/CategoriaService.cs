@@ -68,7 +68,7 @@ public class CategoriaService : ICategoriaService
             ?? throw new InvalidOperationException($"Categoría con ID {id} no encontrada.");
 
         categoria.Activo = true;
-        categoria.FechaModificacion = DateTime.UtcNow;
+        categoria.FechaModificacion = DateTime.Now;
         await _categoriaRepository.UpdateAsync(categoria);
     }
 

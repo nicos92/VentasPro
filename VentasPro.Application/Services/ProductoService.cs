@@ -99,7 +99,7 @@ public class ProductoService : IProductoService
             ?? throw new InvalidOperationException($"Producto con ID {id} no encontrado.");
 
         producto.Activo = true;
-        producto.FechaModificacion = DateTime.UtcNow;
+        producto.FechaModificacion = DateTime.Now;
         await _productoRepository.UpdateAsync(producto);
     }
 

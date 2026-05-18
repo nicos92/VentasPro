@@ -6,7 +6,7 @@ public class Venta : BaseEntity
 {
     public int? ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
-    public DateTime FechaVenta { get; set; } = DateTime.UtcNow;
+    public DateTime FechaVenta { get; set; } = DateTime.Now;
     public decimal Subtotal { get; set; }
     public decimal Impuestos { get; set; }
     public decimal Total { get; set; }
